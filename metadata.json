@@ -1,0 +1,6 @@
+{
+  "name": "Cooperative Governance & Rural Legal Assistance Portal",
+  "description": "Multilingual legal guidance, cooperative laws, government schemes, and PACS advisory portal for farmers and rural citizens.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
