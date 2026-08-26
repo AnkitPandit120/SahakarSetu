@@ -1,6 +1,6 @@
 export type Language = 'en' | 'hi' | 'mr' | 'bn';
 
-export type SourceType = 'KNOWLEDGE_BASE' | 'GOVERNMENT_PORTAL' | 'VERIFIED_WEB';
+export type SourceType = 'KNOWLEDGE_BASE' | 'GOVERNMENT_PORTAL' | 'VERIFIED_WEB' | 'DRIVE_DOCUMENT';
 
 export interface SourceItem {
   id: string;
@@ -14,6 +14,46 @@ export interface SourceItem {
   officialUrl: string;
   sourceType: SourceType;
   summary?: string;
+  snippet?: string;
+}
+
+export interface DriveFileItem {
+  id: string;
+  name: string;
+  mimeType: string;
+  size?: number;
+  modifiedTime?: string;
+  webViewLink?: string;
+  iconLink?: string;
+  isIndexed: boolean;
+  indexedChunkCount?: number;
+  lastIndexedAt?: string;
+  previewSnippet?: string;
+}
+
+export interface DriveDocumentChunk {
+  id: string;
+  fileId: string;
+  fileName: string;
+  text: string;
+  chunkIndex: number;
+  totalChunks?: number;
+  webViewLink?: string;
+  score?: number;
+  authority?: string;
+}
+
+export interface DriveRAGState {
+  isConnected: boolean;
+  userEmail: string | null;
+  userName: string | null;
+  userPhoto: string | null;
+  indexedFiles: DriveFileItem[];
+  chunks: DriveDocumentChunk[];
+  totalChunks: number;
+  lastSyncAt: string | null;
+  isIndexing: boolean;
+  statusMessage: string | null;
 }
 
 export interface StructuredAnswer {

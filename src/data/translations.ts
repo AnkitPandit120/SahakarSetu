@@ -49,6 +49,17 @@ export const TRANSLATIONS: Record<Language, {
   voiceModalTitle: string;
   voiceSpeakPrompt: string;
   voiceStop: string;
+  readAloud: string;
+  stopReading: string;
+  autoSpeak: string;
+  voiceModeBtn: string;
+  voiceModeDesc: string;
+  voiceStatusListening: string;
+  voiceStatusThinking: string;
+  voiceStatusSpeaking: string;
+  voiceStatusIdle: string;
+  voiceSpeed: string;
+  handsFreeMode: string;
   schemesHeading: string;
   schemesSubheading: string;
   filterAll: string;
@@ -141,9 +152,20 @@ export const TRANSLATIONS: Record<Language, {
     suggestedFollowUp: 'Suggested Follow-up Questions',
     legalDisclaimer: 'This platform provides information and guidance based on official public records. It does not replace professional legal, financial or government-authority advice.',
     legalDisclaimerHeader: 'Legal & Public Information Notice',
-    voiceModalTitle: 'Voice Input',
-    voiceSpeakPrompt: 'Speak clearly into your microphone in English, Hindi, Marathi, or Bengali...',
+    voiceModalTitle: 'Voice Assistant',
+    voiceSpeakPrompt: 'Speak clearly in English, Hindi, Marathi, or Bengali...',
     voiceStop: 'Stop & Submit',
+    readAloud: 'Read Aloud',
+    stopReading: 'Stop Audio',
+    autoSpeak: 'Auto-Speak Responses',
+    voiceModeBtn: 'Live Voice Assistant',
+    voiceModeDesc: 'Talk naturally in your regional language with real-time statutory audio answers',
+    voiceStatusListening: 'Listening to you... Speak now',
+    voiceStatusThinking: 'Analyzing acts, schemes & model bye-laws...',
+    voiceStatusSpeaking: 'Speaking answer...',
+    voiceStatusIdle: 'Tap microphone to speak',
+    voiceSpeed: 'Voice Speed',
+    handsFreeMode: 'Hands-Free Dialogue',
     schemesHeading: 'Verified Government Schemes Directory',
     schemesSubheading: 'Explore authentic government support programs, eligibility requirements, benefits, and direct official portals.',
     filterAll: 'All Schemes',
@@ -242,9 +264,20 @@ export const TRANSLATIONS: Record<Language, {
     suggestedFollowUp: 'सुझाए गए संबंधित प्रश्न',
     legalDisclaimer: 'यह मंच आधिकारिक सार्वजनिक रिकॉर्ड पर आधारित सूचना और मार्गदर्शन प्रदान करता है। यह पेशेवर कानूनी या सरकारी अधिकारी की सलाह का स्थान नहीं लेता है।',
     legalDisclaimerHeader: 'कानूनी व सार्वजनिक सूचना अस्वीकरण',
-    voiceModalTitle: 'वॉइस इनपुट',
+    voiceModalTitle: 'वॉइस सहायक',
     voiceSpeakPrompt: 'कृपया माइक्रोफोन में स्पष्ट रूप से बोलें...',
     voiceStop: 'रोकें और भेजें',
+    readAloud: 'बोलकर सुनाएं',
+    stopReading: 'आवाज बंद करें',
+    autoSpeak: 'उत्तर स्वतः बोलकर सुनाएं',
+    voiceModeBtn: 'लाइव वॉइस सहायक',
+    voiceModeDesc: 'अपनी क्षेत्रीय भाषा में सीधे बोलकर प्रमाणित सरकारी उत्तर सुनें',
+    voiceStatusListening: 'सुन रहा हूँ... कृपया बोलिए',
+    voiceStatusThinking: 'सरकारी नियमों व योजनाओं की जांच हो रही है...',
+    voiceStatusSpeaking: 'उत्तर बोल रहा हूँ...',
+    voiceStatusIdle: 'बोलने के लिए माइक दबाएं',
+    voiceSpeed: 'आवाज की गति',
+    handsFreeMode: 'हैंड्स-फ्री निरंतर बातचीत',
     schemesHeading: 'सत्यापित सरकारी योजना निर्देशिका',
     schemesSubheading: 'प्रामाणिक सरकारी सहायता कार्यक्रम, पात्रता मानदंड, लाभ और आधिकारिक पोर्टल लिंक देखें।',
     filterAll: 'सभी योजनाएं',
@@ -343,9 +376,20 @@ export const TRANSLATIONS: Record<Language, {
     suggestedFollowUp: 'सुचवलेले संबंधित प्रश्न',
     legalDisclaimer: 'हे पोर्टल अधिकृत सार्वजनिक नियमांवर आधारित माहिती व मार्गदर्शन पुरवते. हे व्यावसायिक वकील किंवा सक्षम अधिकाऱ्याच्या सल्ल्याचा पर्याय नाही.',
     legalDisclaimerHeader: 'कायदेशीर व सार्वजनिक माहिती सूचना',
-    voiceModalTitle: 'व्हॉइस इनपुट',
+    voiceModalTitle: 'व्हॉइस सहाय्यक',
     voiceSpeakPrompt: 'कृपया मायक्रोफोनमध्ये स्पष्ट बोला...',
     voiceStop: 'थांबवा आणि पाठवा',
+    readAloud: 'मोठ्याने वाचा',
+    stopReading: 'आवाज थांबवा',
+    autoSpeak: 'उत्तरे आपोआप ऐका',
+    voiceModeBtn: 'लाइव्ह व्हॉइस सहाय्यक',
+    voiceModeDesc: 'आपल्या प्रादेशिक भाषेत थेट बोला आणि खात्रीशीर सरकारी उत्तरे ऐका',
+    voiceStatusListening: 'ऐकत आहे... कृपया बोला',
+    voiceStatusThinking: 'शासकीय नियम व योजना तपासत आहे...',
+    voiceStatusSpeaking: 'उत्तर सांगत आहे...',
+    voiceStatusIdle: 'बोलण्यासाठी माइक दाबा',
+    voiceSpeed: 'आवाजाचा वेग',
+    handsFreeMode: 'हँड्स-फ्री सतत संवाद',
     schemesHeading: 'सत्यापित शासकीय योजनांची माहिती',
     schemesSubheading: 'अधिकृत शासकीय योजना, पात्रता निकष, फायदे आणि थेट अर्ज लिंक्स पहा.',
     filterAll: 'सर्व योजना',
@@ -444,9 +488,20 @@ export const TRANSLATIONS: Record<Language, {
     suggestedFollowUp: 'প্রস্তাবিত অন্যান্য প্রশ্ন',
     legalDisclaimer: 'এই প্ল্যাটফর্মটি সরকারি ও আইনি নথির ভিত্তিতে সাধারণ তথ্য ও সহায়তা প্রদান করে। এটি কোনো আইনজীবী বা সরকারি কর্মকর্তার বিকল্প নয়।',
     legalDisclaimerHeader: 'আইনি ও জনতথ্য সংক্রান্ত সতর্কতা',
-    voiceModalTitle: 'ভয়েস ইনপুট',
+    voiceModalTitle: 'ভয়েস সহকারী',
     voiceSpeakPrompt: 'অনুগ্রহ করে মাইক্রোফোনে স্পষ্ট করে বলুন...',
     voiceStop: 'থামুন ও পাঠান',
+    readAloud: 'পড়ে শোনান',
+    stopReading: 'আওয়াজ বন্ধ করুন',
+    autoSpeak: 'উত্তর স্বয়ংক্রিয়ভাবে শুনুন',
+    voiceModeBtn: 'লাইভ ভয়েস সহকারী',
+    voiceModeDesc: 'আপনার মাতৃভাষায় কথা বলুন এবং তাৎক্ষণিক নির্ভরযোগ্য উত্তর শুনুন',
+    voiceStatusListening: 'শুনছি... অনুগ্রহ করে বলুন',
+    voiceStatusThinking: 'সরকারি আইন ও প্রকল্প যাচাই করা হচ্ছে...',
+    voiceStatusSpeaking: 'উত্তর বলা হচ্ছে...',
+    voiceStatusIdle: 'কথা বলতে মাইক চাপুন',
+    voiceSpeed: 'আওয়াজের গতি',
+    handsFreeMode: 'হ্যান্ডস-ফ্রি কথোপকথন',
     schemesHeading: 'যাচাইকৃত সরকারি প্রকল্প তালিকা',
     schemesSubheading: 'সরকারি সুযোগ-সুবিধা, আবেদনের যোগ্যতা, প্রয়োজনীয় নথি ও পোর্টাল লিংক দেখুন।',
     filterAll: 'সকল প্রকল্প',
