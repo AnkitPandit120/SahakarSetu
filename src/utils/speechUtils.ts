@@ -225,6 +225,8 @@ export class PortalSpeaker {
   private static currentChunks: string[] = [];
   private static chunkIndex = 0;
   private static abortController: boolean = false;
+  private static currentAudio: HTMLAudioElement | null = null;
+  private static currentAudioUrl: string | null = null;
 
   public static subscribe(listener: (isSpeaking: boolean, currentMessageId?: string) => void): () => void {
     this.onStateChangeListeners.add(listener);
@@ -241,23 +243,18 @@ export class PortalSpeaker {
   }
 
   public static isSupported(): boolean {
-    return typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+    return typeof window !== 'undefined' && ('Audio' in window || ('speechSynthesis' in window && 'SpeechSynthesisUtterance' in window));
   }
 
-  public static speak(
+  public static async speak(
     text: string,
     lang: Language,
     messageId?: string,
     rate = 0.95,
     onEndCallback?: () => void,
     onErrorCallback?: (err: any) => void
-  ): void {
-    if (!this.isSupported()) {
-      console.warn('Speech synthesis is not supported on this device/browser.');
-      return;
-    }
-
-    // Cancel any ongoing speech first
+  ): Promise<void> {
+    // Cancel any ongoing playback
     this.stop();
     this.abortController = false;
 
@@ -267,12 +264,98 @@ export class PortalSpeaker {
       return;
     }
 
+    // 1. Try ElevenLabs HD Neural Voice via server route first
+    try {
+      this.notify(true, messageId);
+
+      const response = await fetch('/api/speech/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: cleaned,
+          language: lang,
+        })
+      });
+
+      if (this.abortController) {
+        this.notify(false);
+        return;
+      }
+
+      if (response.ok) {
+        const blob = await response.blob();
+        if (this.abortController) {
+          this.notify(false);
+          return;
+        }
+
+        if (blob && blob.size > 100) {
+          const audioUrl = URL.createObjectURL(blob);
+          this.currentAudioUrl = audioUrl;
+          const audio = new Audio(audioUrl);
+          this.currentAudio = audio;
+          audio.playbackRate = Math.max(0.8, Math.min(rate, 1.25));
+
+          audio.onended = () => {
+            if (this.currentAudioUrl) {
+              URL.revokeObjectURL(this.currentAudioUrl);
+              this.currentAudioUrl = null;
+            }
+            this.currentAudio = null;
+            this.notify(false);
+            if (onEndCallback) onEndCallback();
+          };
+
+          audio.onerror = (e) => {
+            console.warn('ElevenLabs audio playback failed, switching to native speech synthesis:', e);
+            if (this.currentAudioUrl) {
+              URL.revokeObjectURL(this.currentAudioUrl);
+              this.currentAudioUrl = null;
+            }
+            this.currentAudio = null;
+            this.speakNativeFallback(cleaned, lang, messageId, rate, onEndCallback, onErrorCallback);
+          };
+
+          await audio.play();
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('ElevenLabs server synthesis unavailable, falling back to browser speech synthesis:', err);
+    }
+
+    if (this.abortController) {
+      this.notify(false);
+      return;
+    }
+
+    // 2. High-reliability fallback: Browser Web SpeechSynthesis
+    this.speakNativeFallback(cleaned, lang, messageId, rate, onEndCallback, onErrorCallback);
+  }
+
+  private static speakNativeFallback(
+    cleaned: string,
+    lang: Language,
+    messageId?: string,
+    rate = 0.95,
+    onEndCallback?: () => void,
+    onErrorCallback?: (err: any) => void
+  ): void {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      this.notify(false);
+      return;
+    }
+
     // Divide into smooth, natural sentence chunks to eliminate robotic clipping and ensure natural pauses
     this.currentChunks = splitIntoFluentChunks(cleaned);
     this.chunkIndex = 0;
 
-    const voice = getBestVoice(lang);
-    const targetLangCode = getLanguageCode(lang);
+    // If text is in Latin script (Hinglish/English), use Indian English voice for natural phonetics
+    const hasIndianScript = /[\u0900-\u097F\u0980-\u09FF]/.test(cleaned);
+    const effectiveLang: Language = (!hasIndianScript && /[a-zA-Z]/.test(cleaned)) ? 'en' : lang;
+
+    const voice = getBestVoice(effectiveLang);
+    const targetLangCode = getLanguageCode(effectiveLang);
 
     // Fluent rate: 0.92x to 0.98x provides natural human cadence in Indian languages
     const fluentRate = lang === 'en' ? Math.max(0.85, Math.min(rate, 1.1)) : Math.max(0.8, Math.min(rate * 0.92, 1.0));
@@ -340,27 +423,46 @@ export class PortalSpeaker {
   }
 
   public static pause(): void {
-    if (this.isSupported() && window.speechSynthesis.speaking) {
+    if (this.currentAudio && !this.currentAudio.paused) {
+      this.currentAudio.pause();
+      return;
+    }
+    if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.speaking) {
       window.speechSynthesis.pause();
     }
   }
 
   public static resume(): void {
-    if (this.isSupported() && window.speechSynthesis.paused) {
+    if (this.currentAudio && this.currentAudio.paused) {
+      this.currentAudio.play();
+      return;
+    }
+    if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
     }
   }
 
   public static stop(): void {
     this.abortController = true;
+    if (this.currentAudio) {
+      try {
+        this.currentAudio.pause();
+        this.currentAudio.currentTime = 0;
+      } catch (_) {}
+      this.currentAudio = null;
+    }
+    if (this.currentAudioUrl) {
+      try {
+        URL.revokeObjectURL(this.currentAudioUrl);
+      } catch (_) {}
+      this.currentAudioUrl = null;
+    }
     this.currentChunks = [];
     this.chunkIndex = 0;
-    if (this.isSupported()) {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
-      } catch (e) {
-        // Safe catch
-      }
+      } catch (_) {}
     }
     this.notify(false);
   }

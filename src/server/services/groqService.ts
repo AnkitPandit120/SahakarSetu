@@ -35,7 +35,6 @@ async function callGroqChat(
     if (!response.ok) {
       const errorText = await response.text();
       console.warn(`Groq API returned status ${response.status}:`, errorText);
-      // If 70b has an issue, try 8b-instant as micro-fallback
       if (model !== 'llama-3.1-8b-instant') {
         return await callGroqChat(systemPrompt, userPrompt, 'llama-3.1-8b-instant');
       }

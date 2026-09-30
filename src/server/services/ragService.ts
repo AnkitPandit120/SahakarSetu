@@ -1,5 +1,5 @@
 import { config } from '../config/env';
-import { getAuthorizedDriveToken } from '../config/google';
+import { getAuthorizedDriveToken, refreshGoogleAccessToken } from '../config/google';
 import { listFilesInsideKnowledgeFolder, downloadDriveFileContent, DriveRemoteFile } from './googleDriveService';
 import { extractDocumentContent } from './documentExtractor';
 import { chunkDocument } from './chunkingService';
@@ -90,8 +90,57 @@ export async function syncKnowledgeBase(
   };
 
   try {
-    // 1. Fetch all eligible files currently present in the Drive folder
-    const remoteFiles: DriveRemoteFile[] = await listFilesInsideKnowledgeFolder(folderId, token);
+    let remoteFiles: DriveRemoteFile[] = [];
+    try {
+      // 1. Fetch all eligible files currently present in the Drive folder
+      remoteFiles = await listFilesInsideKnowledgeFolder(folderId, token);
+    } catch (listErr: any) {
+      const errStr = (listErr.message || '').toLowerCase();
+      const isAuthErr = errStr.includes('autherror') || errStr.includes('invalid credentials') || errStr.includes('401') || errStr.includes('403') || errStr.includes('unauthorized');
+
+      if (isAuthErr && config.googleRefreshToken) {
+        console.log('Attempting token refresh after Drive list auth failure...');
+        try {
+          token = await refreshGoogleAccessToken(config.googleRefreshToken);
+          remoteFiles = await listFilesInsideKnowledgeFolder(folderId, token);
+        } catch (refreshErr: any) {
+          console.warn('Token refresh retry failed:', refreshErr.message);
+        }
+      }
+
+      // If remoteFiles still could not be fetched due to auth
+      if (remoteFiles.length === 0 && (isAuthErr || listErr)) {
+        console.warn(`Drive listing warning: ${listErr.message}`);
+        // If it's an auth error, return report with notice rather than crashing
+        if (isAuthErr) {
+          vectorStore.setSyncState('synced');
+          const existingDocs = vectorStore.getAllDocuments();
+          return {
+            timestamp: new Date().toISOString(),
+            totalDriveFilesFound: existingDocs.length,
+            newFilesIndexed: 0,
+            modifiedFilesUpdated: 0,
+            deletedFilesRemoved: 0,
+            unchangedFilesSkipped: existingDocs.length,
+            failedFilesCount: 1,
+            failedDetails: [{
+              fileName: 'Google Drive Authentication',
+              fileId: folderId,
+              error: 'Google Drive authorization is required or expired. Please connect Google Drive using OAuth in the dashboard.'
+            }],
+            indexedDocuments: existingDocs.map(d => ({
+              fileId: d.fileId,
+              fileName: d.fileName,
+              category: d.category,
+              action: 'skipped',
+              chunkCount: d.chunkCount
+            }))
+          };
+        }
+        throw listErr;
+      }
+    }
+
     report.totalDriveFilesFound = remoteFiles.length;
 
     // 2. Get currently stored files map { [fileId]: modifiedTime }
@@ -181,16 +230,15 @@ export async function syncKnowledgeBase(
       }
     }
 
-    // 4. Detect & Remove Deleted Files (files in DB that no longer exist in Drive)
+    // 4. Detect & Remove Stale/Deleted Files (including hardcoded seed files that do not exist in live Google Drive)
     for (const storedFileId of existingMap.keys()) {
-      // Keep internal baseline seed documents intact if desired, or remove if not in remote Drive
-      if (!remoteFileIdSet.has(storedFileId) && !storedFileId.startsWith('seed-')) {
+      if (!remoteFileIdSet.has(storedFileId)) {
         vectorStore.deleteDocument(storedFileId);
         report.deletedFilesRemoved++;
         report.indexedDocuments.push({
           fileId: storedFileId,
-          fileName: 'Deleted Document',
-          category: 'unknown',
+          fileName: 'Removed Stale Document',
+          category: 'statutory',
           action: 'deleted',
           chunkCount: 0
         });
@@ -205,6 +253,8 @@ export async function syncKnowledgeBase(
   }
 }
 
+import { adminTelemetryStore } from './adminTelemetryService';
+
 /**
  * Handle user query with prioritized RAG pipeline and trusted web search fallback
  */
@@ -218,7 +268,7 @@ export async function handleUserChatQuery(payload: ChatQueryPayload): Promise<Ch
   const queryEmbedding = await generateEmbedding(message);
 
   // 2. Perform vector search in vector database with hybrid matching
-  const minSimilarity = 0.30;
+  const minSimilarity = 0.20;
   const retrievedChunks: SearchResultChunk[] = vectorStore.search(
     queryEmbedding,
     4,
@@ -228,26 +278,42 @@ export async function handleUserChatQuery(payload: ChatQueryPayload): Promise<Ch
   );
 
   // 3. If high-confidence RAG passages found in vector DB, synthesize with RAG context
-  if (retrievedChunks.length > 0 && retrievedChunks[0].similarityScore >= 0.35) {
+  if (retrievedChunks.length > 0 && retrievedChunks[0].similarityScore >= 0.25) {
+    adminTelemetryStore.recordQueryEvent({
+      query: message,
+      language,
+      category,
+      isRagHit: true
+    });
     return await generateGroundedRAGAnswer(message, language, retrievedChunks);
   }
 
-  // 4. No reliable RAG result -> Fallback to Trusted Government Web Search
+  // 4. No reliable RAG result -> Fallback to Internet Web Search Grounding
   const webAnswer = await performTrustedWebSearch(message, language);
-  if (webAnswer.hasAnswer && webAnswer.answer && webAnswer.sources.length > 0) {
+  if (webAnswer.hasAnswer && webAnswer.answer) {
+    adminTelemetryStore.recordQueryEvent({
+      query: message,
+      language,
+      category,
+      isRagHit: false,
+      webSources: (webAnswer.sources || []).map(s => ({ title: s.title, officialUrl: s.officialUrl }))
+    });
+
     return {
       answer: webAnswer.answer,
       sourceType: 'web',
-      sources: webAnswer.sources.map(s => ({
+      isInternetFallback: true,
+      disclaimer: webAnswer.disclaimer,
+      sources: (webAnswer.sources || []).map(s => ({
         title: s.title,
         authority: s.authority,
         officialUrl: s.officialUrl,
         sourceType: 'web'
       })),
       followUpQuestions: webAnswer.followUpQuestions || [
-        'How can I apply for this on the official portal?',
-        'What documents are required by the scheme guidelines?',
-        'Where can I find the nearest government office?'
+        'How can I verify this on the official government portal?',
+        'Which government authority or department administers this?',
+        'What statutory documents or forms are officially required?'
       ]
     };
   }
@@ -256,14 +322,18 @@ export async function handleUserChatQuery(payload: ChatQueryPayload): Promise<Ch
   if (config.groqApiKey) {
     try {
       const groqGeneral = await generateGroqGeneralAnswer(message, language);
-      if (groqGeneral) {
-        return groqGeneral;
-      }
+      if (groqGeneral) return groqGeneral;
     } catch (groqErr: any) {
       console.warn('Groq general query fallback error:', groqErr?.message);
     }
   }
 
   // 6. If neither AI nor trusted web search has reliable info -> Return honest no-hallucination fallback
-  return getNoReliableSourceResponse(language);
+  adminTelemetryStore.recordQueryEvent({
+    query: message,
+    language,
+    category,
+    isRagHit: false
+  });
+  return getNoReliableSourceResponse(language, message);
 }

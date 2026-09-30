@@ -1,6 +1,10 @@
 {
-  "name": "SahakarSetu — Cooperative Governance & Rural Legal Assistance",
-  "description": "Multilingual AI legal assistant and statutory portal for Model PACS Bye-Laws 2024, MSCS Act 2023, government schemes, and Google Drive RAG integration.",
-  "requestFramePermissions": ["microphone"],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "name": "Remix Cooperative Governance \u0026 Rural Legal Assistance Portal",
+  "description": "Multilingual legal guidance, cooperative laws, government schemes, and PACS advisory portal for farmers and rural citizens.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

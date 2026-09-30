@@ -20,7 +20,7 @@ function getAIClient(): GoogleGenAI | null {
 }
 
 /**
- * Generate embedding vector for a single text using Gemini text-embedding-004
+ * Generate embedding vector for a single text using Gemini embedding
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
   const client = getAIClient();
@@ -30,7 +30,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   if (client) {
     try {
       const response = await client.models.embedContent({
-        model: 'text-embedding-004',
+        model: 'gemini-embedding-2-preview',
         contents: clean
       });
 

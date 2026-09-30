@@ -18,28 +18,72 @@ export interface DriveFolderInfo {
 }
 
 /**
+ * Valid supported MIME types and file extensions for Knowledge Base indexing
+ */
+export const SUPPORTED_KNOWLEDGE_MIMES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword',
+  'application/vnd.google-apps.document',
+  'application/vnd.google-apps.spreadsheet',
+  'text/plain',
+  'text/markdown',
+  'text/x-markdown',
+  'text/csv',
+  'application/rtf',
+  'text/rtf',
+  'text/html'
+];
+
+export const SUPPORTED_EXTENSIONS_REGEX = /\.(pdf|docx|doc|txt|md|markdown|csv|rtf|html|htm)$/i;
+
+/**
+ * Check if a file item is a valid indexable knowledge document
+ */
+export function isValidKnowledgeDocument(mimeType: string, fileName: string): boolean {
+  if (!mimeType && !fileName) return false;
+  const cleanMime = (mimeType || '').toLowerCase();
+  const cleanName = (fileName || '').toLowerCase();
+
+  return (
+    SUPPORTED_KNOWLEDGE_MIMES.includes(cleanMime) ||
+    cleanMime.startsWith('text/') ||
+    cleanMime.includes('document') ||
+    cleanMime.includes('word') ||
+    cleanMime.includes('pdf') ||
+    SUPPORTED_EXTENSIONS_REGEX.test(cleanName)
+  );
+}
+
+/**
  * Determine standardized category string from folder name or file path
  */
 export function inferCategoryFromFolder(folderName: string, fileName?: string): string {
   const norm = `${folderName || ''} ${fileName || ''}`.toLowerCase();
 
-  if (norm.includes('law') || norm.includes('act') || norm.includes('statute') || norm.includes('rule') || norm.includes('legal')) {
-    return 'law';
+  if (norm.includes('traffic') || norm.includes('vehicle') || norm.includes('motor') || norm.includes('challan') || norm.includes('morth') || norm.includes('helmet') || norm.includes('driving')) {
+    return 'traffic';
   }
-  if (norm.includes('scheme') || norm.includes('yojana') || norm.includes('government scheme') || norm.includes('subsidy')) {
+  if (norm.includes('land') || norm.includes('mutation') || norm.includes('svamitva') || norm.includes('property') || norm.includes('revenue') || norm.includes('dakhil') || norm.includes('jamabandi') || norm.includes('7/12') || norm.includes('khasra')) {
+    return 'land';
+  }
+  if (norm.includes('scheme') || norm.includes('yojana') || norm.includes('government scheme') || norm.includes('subsidy') || norm.includes('pm-kisan') || norm.includes('kisan')) {
     return 'schemes';
   }
-  if (norm.includes('agri') || norm.includes('farm') || norm.includes('crop') || norm.includes('pmfby') || norm.includes('kcc')) {
+  if (norm.includes('agri') || norm.includes('farm') || norm.includes('crop') || norm.includes('pmfby') || norm.includes('kcc') || norm.includes('seed') || norm.includes('fertilizer') || norm.includes('fco')) {
     return 'agriculture';
   }
-  if (norm.includes('pacs') || norm.includes('bye-law') || norm.includes('byelaw') || norm.includes('society') || norm.includes('cooperative')) {
+  if (norm.includes('pacs') || norm.includes('bye-law') || norm.includes('byelaw') || norm.includes('society') || norm.includes('cooperative') || norm.includes('sahakar') || norm.includes('mscs') || norm.includes('crcs')) {
     return 'pacs';
   }
-  if (norm.includes('finan') || norm.includes('bank') || norm.includes('loan') || norm.includes('credit') || norm.includes('audit')) {
+  if (norm.includes('finan') || norm.includes('bank') || norm.includes('loan') || norm.includes('credit') || norm.includes('audit') || norm.includes('subvention') || norm.includes('nabard')) {
     return 'finance';
   }
-  if (norm.includes('grievance') || norm.includes('ombudsman') || norm.includes('complaint') || norm.includes('dispute') || norm.includes('arbitration')) {
+  if (norm.includes('grievance') || norm.includes('ombudsman') || norm.includes('complaint') || norm.includes('dispute') || norm.includes('arbitration') || norm.includes('lokpal')) {
     return 'grievance';
+  }
+  if (norm.includes('law') || norm.includes('act') || norm.includes('statute') || norm.includes('rule') || norm.includes('legal') || norm.includes('reference') || norm.includes('rti') || norm.includes('fir') || norm.includes('constitution') || norm.includes('consumer')) {
+    return 'law';
   }
   return 'general';
 }
@@ -49,26 +93,41 @@ export function inferCategoryFromFolder(folderName: string, fileName?: string): 
  */
 export function inferAuthority(category: string, fileName: string): string {
   const norm = fileName.toLowerCase();
+  if (norm.includes('vehicle') || norm.includes('traffic') || norm.includes('morth')) {
+    return 'Ministry of Road Transport and Highways (MoRTH), Govt of India';
+  }
+  if (norm.includes('land') || norm.includes('svamitva') || norm.includes('revenue') || norm.includes('dolr')) {
+    return 'Department of Land Resources & Ministry of Panchayati Raj';
+  }
   if (norm.includes('mscs') || norm.includes('multi-state') || norm.includes('crcs')) {
     return 'Central Registrar of Cooperative Societies (CRCS), Govt of India';
   }
   if (norm.includes('pacs') || norm.includes('model byelaw')) {
     return 'Ministry of Cooperation, Government of India';
   }
-  if (norm.includes('pmfby') || norm.includes('pm-kisan') || norm.includes('fasal')) {
+  if (norm.includes('pmfby') || norm.includes('pm-kisan') || norm.includes('fasal') || norm.includes('farmer') || norm.includes('seed')) {
     return 'Ministry of Agriculture & Farmers Welfare, Govt of India';
   }
   if (norm.includes('rbi') || norm.includes('nabard') || norm.includes('kcc')) {
     return 'Reserve Bank of India / NABARD';
   }
+  if (norm.includes('rti') || norm.includes('constitution') || norm.includes('quick_ref') || norm.includes('quick reference')) {
+    return 'Ministry of Law and Justice, Government of India';
+  }
 
   switch (category) {
+    case 'traffic':
+      return 'Ministry of Road Transport and Highways (MoRTH), Govt of India';
+    case 'land':
+      return 'Department of Land Resources & Ministry of Panchayati Raj';
     case 'law':
-      return 'Ministry of Law & Justice / Ministry of Cooperation';
+      return 'Ministry of Law and Justice, Government of India';
     case 'schemes':
       return 'Government of India - Department of Agriculture';
     case 'pacs':
       return 'Ministry of Cooperation, Govt of India';
+    case 'agriculture':
+      return 'Ministry of Agriculture & Farmers Welfare, Govt of India';
     case 'finance':
       return 'NABARD / Reserve Bank of India';
     case 'grievance':
@@ -79,13 +138,13 @@ export function inferAuthority(category: string, fileName: string): string {
 }
 
 /**
- * Get folder metadata by ID
+ * Get folder metadata by ID with shared drive support
  */
 export async function getFolderMetadata(
   folderId: string,
   accessToken: string
 ): Promise<DriveFolderInfo> {
-  const url = `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name,webViewLink,mimeType`;
+  const url = `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name,webViewLink,mimeType&supportsAllDrives=true`;
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
@@ -104,51 +163,20 @@ export async function getFolderMetadata(
 }
 
 /**
- * List all available top-level and shared folders in Drive for easy admin selection
+ * List all available top-level and shared folders in Drive for easy admin selection (with full pagination)
  */
 export async function listUserDriveFolders(
   accessToken: string
 ): Promise<DriveFolderInfo[]> {
-  const query = "mimeType = 'application/vnd.google-apps.folder' and trashed = false";
-  const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&pageSize=50&fields=files(id,name,webViewLink)`;
+  const allFolders: DriveFolderInfo[] = [];
+  let pageToken: string | undefined = undefined;
 
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` }
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Failed to list Drive folders: ${errText}`);
-  }
-
-  const data = await response.json() as { files: Array<{ id: string; name: string; webViewLink?: string }> };
-  return data.files || [];
-}
-
-/**
- * List all knowledge documents located inside the designated Google Drive knowledge folder and its sub-folders
- */
-export async function listFilesInsideKnowledgeFolder(
-  rootFolderId: string,
-  accessToken: string
-): Promise<DriveRemoteFile[]> {
-  const filesFound: DriveRemoteFile[] = [];
-
-  // Supported MIME types
-  const validMimes = [
-    'application/pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/msword',
-    'application/vnd.google-apps.document',
-    'text/plain',
-    'text/markdown',
-    'text/csv'
-  ];
-
-  // Helper to process a folder
-  async function scanFolder(folderId: string, folderName: string) {
-    const query = `'${folderId}' in parents and trashed = false`;
-    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&pageSize=100&fields=files(id,name,mimeType,modifiedTime,size,webViewLink)`;
+  do {
+    const query = "mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+    let url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&pageSize=100&fields=nextPageToken,files(id,name,webViewLink)&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+    if (pageToken) {
+      url += `&pageToken=${encodeURIComponent(pageToken)}`;
+    }
 
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${accessToken}` }
@@ -156,42 +184,96 @@ export async function listFilesInsideKnowledgeFolder(
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Failed to list contents of folder "${folderName}" (${folderId}): ${errText}`);
+      throw new Error(`Failed to list Drive folders: ${errText}`);
     }
 
     const data = await response.json() as {
-      files: Array<{
-        id: string;
-        name: string;
-        mimeType: string;
-        modifiedTime: string;
-        size?: string;
-        webViewLink?: string;
-      }>;
+      nextPageToken?: string;
+      files: Array<{ id: string; name: string; webViewLink?: string }>;
     };
 
-    for (const item of data.files || []) {
-      if (item.mimeType === 'application/vnd.google-apps.folder') {
-        // Recursively scan subfolders (e.g. /Law/, /Government Schemes/, etc.)
-        await scanFolder(item.id, item.name);
-      } else if (validMimes.includes(item.mimeType) || item.name.match(/\.(pdf|docx|doc|txt|md)$/i)) {
-        const category = inferCategoryFromFolder(folderName, item.name);
-        const authority = inferAuthority(category, item.name);
-
-        filesFound.push({
-          id: item.id,
-          name: item.name,
-          mimeType: item.mimeType,
-          modifiedTime: item.modifiedTime,
-          size: item.size,
-          webViewLink: item.webViewLink || `https://drive.google.com/file/d/${item.id}/view`,
-          category,
-          authority,
-          parentFolderId: folderId,
-          parentFolderName: folderName
-        });
-      }
+    if (data.files && data.files.length > 0) {
+      allFolders.push(...data.files);
     }
+    pageToken = data.nextPageToken;
+  } while (pageToken && allFolders.length < 500);
+
+  return allFolders;
+}
+
+/**
+ * List all knowledge documents located inside the designated Google Drive knowledge folder and its sub-folders.
+ * Fully paginated with nextPageToken loop and supportsAllDrives / includeItemsFromAllDrives enabled.
+ */
+export async function listFilesInsideKnowledgeFolder(
+  rootFolderId: string,
+  accessToken: string
+): Promise<DriveRemoteFile[]> {
+  const filesFound: DriveRemoteFile[] = [];
+  const visitedFolderIds = new Set<string>();
+
+  // Helper to recursively process a folder and all its pages
+  async function scanFolder(folderId: string, folderName: string) {
+    if (visitedFolderIds.has(folderId)) {
+      return;
+    }
+    visitedFolderIds.add(folderId);
+
+    let pageToken: string | undefined = undefined;
+
+    do {
+      const query = `'${folderId}' in parents and trashed = false`;
+      let url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&pageSize=100&fields=nextPageToken,files(id,name,mimeType,modifiedTime,size,webViewLink,parents)&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+      if (pageToken) {
+        url += `&pageToken=${encodeURIComponent(pageToken)}`;
+      }
+
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to list contents of folder "${folderName}" (${folderId}): ${errText}`);
+      }
+
+      const data = await response.json() as {
+        nextPageToken?: string;
+        files: Array<{
+          id: string;
+          name: string;
+          mimeType: string;
+          modifiedTime: string;
+          size?: string;
+          webViewLink?: string;
+        }>;
+      };
+
+      for (const item of data.files || []) {
+        if (item.mimeType === 'application/vnd.google-apps.folder') {
+          // Recursively scan subfolders (e.g. /Law/, /Agriculture/, /Traffic/, etc.)
+          await scanFolder(item.id, item.name);
+        } else if (isValidKnowledgeDocument(item.mimeType, item.name)) {
+          const category = inferCategoryFromFolder(folderName, item.name);
+          const authority = inferAuthority(category, item.name);
+
+          filesFound.push({
+            id: item.id,
+            name: item.name,
+            mimeType: item.mimeType,
+            modifiedTime: item.modifiedTime || new Date().toISOString(),
+            size: item.size,
+            webViewLink: item.webViewLink || `https://drive.google.com/file/d/${item.id}/view`,
+            category,
+            authority,
+            parentFolderId: folderId,
+            parentFolderName: folderName
+          });
+        }
+      }
+
+      pageToken = data.nextPageToken;
+    } while (pageToken);
   }
 
   // Fetch root folder metadata
@@ -208,16 +290,16 @@ export async function listFilesInsideKnowledgeFolder(
 }
 
 /**
- * Download raw binary content or export Google Doc as plain text
+ * Download raw binary content or export Google Doc / Sheet as plain text / CSV
  */
 export async function downloadDriveFileContent(
   fileId: string,
   mimeType: string,
   accessToken: string
 ): Promise<{ buffer: Buffer; mimeType: string }> {
-  // If it's a native Google Docs file, export as text/plain
+  // 1. Native Google Docs file -> export as text/plain
   if (mimeType === 'application/vnd.google-apps.document') {
-    const exportUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=text/plain`;
+    const exportUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=text/plain&supportsAllDrives=true`;
     const response = await fetch(exportUrl, {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
@@ -234,8 +316,27 @@ export async function downloadDriveFileContent(
     };
   }
 
-  // Regular binary file (PDF, DOCX, TXT)
-  const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+  // 2. Native Google Sheets file -> export as text/csv
+  if (mimeType === 'application/vnd.google-apps.spreadsheet') {
+    const exportUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=text/csv&supportsAllDrives=true`;
+    const response = await fetch(exportUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Google Sheet export failed (${fileId}): ${err}`);
+    }
+
+    const arrayBuf = await response.arrayBuffer();
+    return {
+      buffer: Buffer.from(arrayBuf),
+      mimeType: 'text/csv'
+    };
+  }
+
+  // 3. Regular binary file (PDF, DOCX, TXT, CSV, RTF, MD)
+  const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`;
   const response = await fetch(downloadUrl, {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
@@ -251,3 +352,4 @@ export async function downloadDriveFileContent(
     mimeType
   };
 }
+

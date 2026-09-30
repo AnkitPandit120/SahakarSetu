@@ -8,7 +8,8 @@ import {
   Mail,
   MapPin,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Download
 } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../data/translations';
@@ -212,6 +213,17 @@ export const Footer: React.FC<FooterProps> = ({ language }) => {
               <li className="hover:text-amber-300 cursor-pointer">Terms & Conditions</li>
               <li className="hover:text-amber-300 cursor-pointer">GIGW 3.0 Compliance</li>
               <li className="hover:text-amber-300 cursor-pointer">Help & Feedback</li>
+              <li className="pt-2">
+                <a
+                  href="/api/download-images"
+                  download="sahakarsetu_all_images.zip"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold transition-all shadow-sm text-xs"
+                  title="Download all project images in a single ZIP file"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>{language === 'hi' ? 'सभी चित्र डाउनलोड करें (.ZIP)' : 'Download All Images (.ZIP)'}</span>
+                </a>
+              </li>
             </ul>
           </div>
         </div>

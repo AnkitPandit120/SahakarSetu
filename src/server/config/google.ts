@@ -118,17 +118,32 @@ export async function refreshGoogleAccessToken(refreshToken?: string): Promise<s
 }
 
 /**
+ * Check if a token string looks like a valid Google OAuth access token rather than internal admin token
+ */
+export function isGoogleOAuthToken(token?: string): boolean {
+  if (!token || typeof token !== 'string') return false;
+  const t = token.trim();
+  if (t.startsWith('adm_') || t.startsWith('gov_admin_')) return false;
+  // Google OAuth 2.0 access tokens typically start with ya29. or are bearer tokens
+  return t.length > 20;
+}
+
+/**
  * Resolve an active access token for Google Drive API operations
  */
 export async function getAuthorizedDriveToken(customToken?: string): Promise<string> {
-  if (customToken && customToken.trim()) {
+  if (customToken && isGoogleOAuthToken(customToken)) {
     return customToken.trim();
   }
-  if (config.adminAccessToken) {
+  if (config.adminAccessToken && isGoogleOAuthToken(config.adminAccessToken)) {
     return config.adminAccessToken;
   }
   if (config.googleRefreshToken) {
-    return await refreshGoogleAccessToken(config.googleRefreshToken);
+    try {
+      return await refreshGoogleAccessToken(config.googleRefreshToken);
+    } catch (e: any) {
+      console.warn('Failed to refresh Google access token via refresh token:', e.message);
+    }
   }
-  throw new Error('Google Drive authorization required. Please authenticate via Google OAuth or provide DRIVE_REFRESH_TOKEN.');
+  throw new Error('Google Drive authorization required. Please authenticate via Google OAuth or connect Google Drive in the dashboard.');
 }

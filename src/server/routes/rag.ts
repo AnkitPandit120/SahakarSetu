@@ -12,7 +12,14 @@ export const ragRouter = Router();
 ragRouter.post('/sync', async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
-    const customToken = authHeader ? authHeader.replace(/^Bearer\s+/i, '') : req.body.accessToken;
+    let customToken = req.body.accessToken || req.body.driveToken;
+    if (!customToken && authHeader) {
+      const headerToken = authHeader.replace(/^Bearer\s+/i, '').trim();
+      // Only treat as Google token if not internal admin session
+      if (!headerToken.startsWith('adm_') && !headerToken.startsWith('gov_admin_')) {
+        customToken = headerToken;
+      }
+    }
     const folderId = req.body.folderId || config.driveKnowledgeFolderId;
 
     if (!folderId) {
@@ -23,14 +30,21 @@ ragRouter.post('/sync', async (req: Request, res: Response) => {
 
     const hasDriveAuth = !!(customToken || config.adminAccessToken || config.googleRefreshToken);
     const report = await syncKnowledgeBase(folderId, customToken);
+
+    const hasAuthFailure = report.failedDetails?.some(d => (d.error || '').toLowerCase().includes('authorization'));
     
-    const message = hasDriveAuth
-      ? `Synchronization complete. Indexed ${report.newFilesIndexed} new, updated ${report.modifiedFilesUpdated}, removed ${report.deletedFilesRemoved}, skipped ${report.unchangedFilesSkipped} unchanged.`
-      : `Synchronized ${report.totalDriveFilesFound} verified statutory knowledge documents (Model PACS Bye-Laws, PMFBY, MSCS Act). Connect Google Drive with OAuth to sync custom private documents.`;
+    let message = '';
+    if (hasAuthFailure) {
+      message = 'Google Drive authorization required or expired. Please click "Connect Google Drive" to link your account and index files from this folder.';
+    } else if (hasDriveAuth) {
+      message = `Synchronization complete. Indexed ${report.newFilesIndexed} new, updated ${report.modifiedFilesUpdated}, removed ${report.deletedFilesRemoved}, skipped ${report.unchangedFilesSkipped} unchanged (${report.totalDriveFilesFound} active files in Drive).`;
+    } else {
+      message = `Synchronized ${report.totalDriveFilesFound} verified statutory knowledge documents (Model PACS Bye-Laws, PMFBY, MSCS Act). Connect Google Drive with OAuth to sync custom private documents.`;
+    }
 
     res.json({
-      success: true,
-      requiresAuth: !hasDriveAuth,
+      success: !hasAuthFailure,
+      requiresAuth: !hasDriveAuth || hasAuthFailure,
       message,
       report
     });
@@ -75,6 +89,36 @@ ragRouter.get('/documents', (req: Request, res: Response) => {
   try {
     const docs = vectorStore.getAllDocuments();
     res.json(docs);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/rag/documents/clear
+ * Clear all indexed documents
+ */
+ragRouter.post('/documents/clear', (req: Request, res: Response) => {
+  try {
+    vectorStore.clearAllDocuments();
+    res.json({ success: true, message: 'All indexed documents cleared.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/rag/documents/reseed
+ * Reseed verified baseline statutory documents
+ */
+ragRouter.post('/documents/reseed', (req: Request, res: Response) => {
+  try {
+    vectorStore.reseedVerifiedDocuments();
+    res.json({
+      success: true,
+      message: 'Verified baseline statutory documents re-seeded.',
+      totalDocuments: vectorStore.getAllDocuments().length
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

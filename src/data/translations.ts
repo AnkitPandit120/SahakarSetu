@@ -6,6 +6,7 @@ export const TRANSLATIONS: Record<Language, {
   navHome: string;
   navServices: string;
   navSchemes: string;
+  navFaq: string;
   navAbout: string;
   navLogin: string;
   navAccount: string;
@@ -80,6 +81,8 @@ export const TRANSLATIONS: Record<Language, {
   loginTitle: string;
   registerTitle: string;
   emailLabel: string;
+  usernameLabel: string;
+  loginIdentifierLabel: string;
   passwordLabel: string;
   fullNameLabel: string;
   roleLabel: string;
@@ -96,6 +99,10 @@ export const TRANSLATIONS: Record<Language, {
   bookmarksTitle: string;
   noBookmarks: string;
   logoutBtn: string;
+  officerLoginTab: string;
+  citizenLoginTab: string;
+  openAdminConsoleBtn: string;
+  adminLoginDesc: string;
   helplineTitle: string;
   helplineKisan: string;
   helplinePmfby: string;
@@ -112,6 +119,7 @@ export const TRANSLATIONS: Record<Language, {
     navHome: 'Home',
     navServices: 'Services',
     navSchemes: 'Schemes',
+    navFaq: 'FAQs',
     navAbout: 'About',
     navLogin: 'Login',
     navAccount: 'My Portal',
@@ -192,6 +200,8 @@ export const TRANSLATIONS: Record<Language, {
     loginTitle: 'Citizen & Member Login',
     registerTitle: 'Create Free Account',
     emailLabel: 'Email Address',
+    usernameLabel: 'Username',
+    loginIdentifierLabel: 'Username or Email',
     passwordLabel: 'Password',
     fullNameLabel: 'Full Name',
     roleLabel: 'Your Role / Occupation',
@@ -208,6 +218,10 @@ export const TRANSLATIONS: Record<Language, {
     bookmarksTitle: 'Bookmarked Schemes & Answers',
     noBookmarks: 'No bookmarks saved yet. Click the bookmark icon on any answer or scheme.',
     logoutBtn: 'Sign Out',
+    officerLoginTab: 'Ministry Officer / Admin',
+    citizenLoginTab: 'Citizen / Member',
+    openAdminConsoleBtn: 'Open Admin Console →',
+    adminLoginDesc: 'Authorized portal officers can access RAG telemetry, missing knowledge alerts, and drive sync.',
     helplineTitle: 'Official Public Helplines',
     helplineKisan: 'Kisan Call Centre: 1800-180-1551 (Toll-free)',
     helplinePmfby: 'PMFBY Crop Loss Helpline: 14447 (Toll-free)',
@@ -224,6 +238,7 @@ export const TRANSLATIONS: Record<Language, {
     navHome: 'होम',
     navServices: 'सेवाएं',
     navSchemes: 'योजनाएं',
+    navFaq: 'प्रश्नोत्तरी (FAQ)',
     navAbout: 'परिचय',
     navLogin: 'लॉग इन',
     navAccount: 'मेरा पोर्टल',
@@ -304,6 +319,8 @@ export const TRANSLATIONS: Record<Language, {
     loginTitle: 'नागरिक व सदस्य लॉगिन',
     registerTitle: 'निशुल्क खाता बनाएं',
     emailLabel: 'ईमेल पता',
+    usernameLabel: 'यूज़रनेम (Username)',
+    loginIdentifierLabel: 'यूज़रनेम या ईमेल (Username or Email)',
     passwordLabel: 'पासवर्ड',
     fullNameLabel: 'पूरा नाम',
     roleLabel: 'आपकी भूमिका / व्यवसाय',
@@ -320,6 +337,10 @@ export const TRANSLATIONS: Record<Language, {
     bookmarksTitle: 'बुकमार्क की गई योजनाएं व उत्तर',
     noBookmarks: 'कोई बुकमार्क नहीं है। किसी भी उत्तर या योजना पर बुकमार्क आइकन क्लिक करें।',
     logoutBtn: 'साइन आउट',
+    officerLoginTab: 'मंत्रालय अधिकारी / प्रशासक',
+    citizenLoginTab: 'नागरिक / सदस्य',
+    openAdminConsoleBtn: 'प्रशासनिक नियंत्रण केंद्र खोलें →',
+    adminLoginDesc: 'RAG ज्ञान अंतराल टेलीमेट्री, ड्राइव ज्ञानकोष और प्रशासनिक नियंत्रण के लिए लॉगिन करें।',
     helplineTitle: 'आधिकारिक सार्वजनिक हेल्पलाइन',
     helplineKisan: 'किसान कॉल सेंटर: 1800-180-1551 (टोल-फ्री)',
     helplinePmfby: 'PMFBY फसल नुकसान हेल्पलाइन: 14447 (टोल-फ्री)',
@@ -336,6 +357,7 @@ export const TRANSLATIONS: Record<Language, {
     navHome: 'मुख्यपृष्ठ',
     navServices: 'सेवा',
     navSchemes: 'योजना',
+    navFaq: 'प्रश्नोत्तरे (FAQ)',
     navAbout: 'माहिती',
     navLogin: 'लॉगिन',
     navAccount: 'माझे खाते',
@@ -416,6 +438,8 @@ export const TRANSLATIONS: Record<Language, {
     loginTitle: 'नागरिक व सभासद लॉगिन',
     registerTitle: 'मोफत खाते तयार करा',
     emailLabel: 'ईमेल पत्ता',
+    usernameLabel: 'युझरनेम (Username)',
+    loginIdentifierLabel: 'युझरनेम किंवा ईमेल (Username or Email)',
     passwordLabel: 'पासवर्ड',
     fullNameLabel: 'पूर्ण नाव',
     roleLabel: 'तुमची भूमिका / व्यवसाय',
@@ -432,6 +456,10 @@ export const TRANSLATIONS: Record<Language, {
     bookmarksTitle: 'बुकमार्क केलेल्या योजना व उत्तरे',
     noBookmarks: 'अद्याप कोणतेही बुकमार्क केलेले नाही.',
     logoutBtn: 'साइन आउट',
+    officerLoginTab: 'मंत्रालय अधिकारी / प्रशासक',
+    citizenLoginTab: 'नागरिक / सभासद',
+    openAdminConsoleBtn: 'प्रशासकीय नियंत्रण केंद्र उघडा →',
+    adminLoginDesc: 'RAG ज्ञान अंतर, अलर्ट आणि ज्ञानकोश व्यवस्थापनासाठी लॉगिन करा.',
     helplineTitle: 'अधिकृत सार्वजनिक हेल्पलाइन',
     helplineKisan: 'किसान कॉल सेंटर: १८००-१८०-१५५१ (टोल-फ्री)',
     helplinePmfby: 'PMFBY पीक नुकसान हेल्पलाइन: १४४४७ (टोल-फ्री)',
@@ -448,6 +476,7 @@ export const TRANSLATIONS: Record<Language, {
     navHome: 'হোম',
     navServices: 'পরিষেবা',
     navSchemes: 'প্রকল্পসমূহ',
+    navFaq: 'জিজ্ঞাসা (FAQ)',
     navAbout: 'সম্পর্কে',
     navLogin: 'লগইন',
     navAccount: 'আমার প্রোফাইল',
@@ -528,6 +557,8 @@ export const TRANSLATIONS: Record<Language, {
     loginTitle: 'নাগরিক ও সদস্য লগইন',
     registerTitle: 'বিনামূল্যে অ্যাকাউন্ট খুলুন',
     emailLabel: 'ইমেইল ঠিকানা',
+    usernameLabel: 'ইউজারনেম (Username)',
+    loginIdentifierLabel: 'ইউজারনেম অথবা ইমেইল (Username or Email)',
     passwordLabel: 'পাসওয়ার্ড',
     fullNameLabel: 'পুরো নাম',
     roleLabel: 'আপনার পেশা / ভূমিকা',
@@ -544,6 +575,10 @@ export const TRANSLATIONS: Record<Language, {
     bookmarksTitle: 'বুকমার্ক করা উত্তর ও প্রকল্প',
     noBookmarks: 'কোনো বুকমার্ক সংরক্ষিত নেই।',
     logoutBtn: 'সাইন আউট',
+    officerLoginTab: 'মন্ত্রণালয় কর্মকর্তা / প্রশাসক',
+    citizenLoginTab: 'নাগরিক / সদস্য',
+    openAdminConsoleBtn: 'প্রশাসনিক নিয়ন্ত্রণ কেন্দ্র খুলুন →',
+    adminLoginDesc: 'জ্ঞান ব্যবধান টেলিমেট্রি ও ফাইল ব্যবস্থাপনার জন্য অনুমোদিত তথ্য দিয়ে লগইন করুন।',
     helplineTitle: 'সরকারি জরুরি হেল্পলাইন',
     helplineKisan: 'কিষাণ কল সেন্টার: ১৮০০-১৮০-১৫৫১ (টোল-ফ্রি)',
     helplinePmfby: 'PMFBY শস্য ক্ষতি হেল্পলাইন: ১৪৪৪৭ (টোল-ফ্রি)',

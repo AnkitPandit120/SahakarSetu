@@ -23,11 +23,15 @@ import {
   Plus,
   Square,
   ArrowUp,
-  HelpCircle
+  HelpCircle,
+  Radio,
+  Headphones,
+  Share2
 } from 'lucide-react';
 import { ChatMessage, Language, SourceItem, UserProfile } from '../types';
 import { TRANSLATIONS } from '../data/translations';
 import { PortalSpeaker, getLanguageCode } from '../utils/speechUtils';
+import { WhatsAppShareModal } from './WhatsAppShareModal';
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -44,6 +48,7 @@ interface ChatViewProps {
   onBookmarkAnswer: (message: ChatMessage) => void;
   bookmarkedIds: Set<string>;
   initialVoiceActive?: boolean;
+  onOpenSpeechToSpeech?: () => void;
 }
 
 export const ChatView: React.FC<ChatViewProps> = ({
@@ -60,23 +65,24 @@ export const ChatView: React.FC<ChatViewProps> = ({
   user,
   onBookmarkAnswer,
   bookmarkedIds,
-  initialVoiceActive = false
+  initialVoiceActive = false,
+  onOpenSpeechToSpeech
 }) => {
   const t = TRANSLATIONS[language];
   const [inputText, setInputText] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
-  // In-Chat Voice Mode State
+  // In-Chat Voice-to-Text Dictation State
   const [isVoiceActive, setIsVoiceActive] = useState(false);
-  const [voiceTranscript, setVoiceTranscript] = useState('');
-  const [voiceInterim, setVoiceInterim] = useState('');
-  const [waveTick, setWaveTick] = useState(0);
-  const [showVoiceTemplates, setShowVoiceTemplates] = useState(false);
+  const [micError, setMicError] = useState<string | null>(null);
+  const baseInputTextRef = useRef<string>('');
 
   const [feedbackMap, setFeedbackMap] = useState<Record<string, 'helpful' | 'unhelpful'>>({});
   const [currentlySpeakingId, setCurrentlySpeakingId] = useState<string | null>(null);
   const [autoSpeakEnabled, setAutoSpeakEnabled] = useState(false);
   const [speechSpeed, setSpeechSpeed] = useState<number>(0.95);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [whatsAppModalMessages, setWhatsAppModalMessages] = useState<ChatMessage[] | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const lastSpokenMessageIdRef = useRef<string | null>(null);
@@ -102,19 +108,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
     };
   }, []);
 
-  // Equalizer animation ticker during voice recording
-  useEffect(() => {
-    let interval: any;
-    if (isVoiceActive) {
-      interval = setInterval(() => {
-        setWaveTick(prev => (prev + 1) % 1000);
-      }, 70);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isVoiceActive]);
-
   // Auto-speak new assistant messages if enabled
   useEffect(() => {
     if (autoSpeakEnabled && messages.length > 0 && !isLoading) {
@@ -135,7 +128,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isLoading, isVoiceActive, voiceInterim]);
+  }, [messages, isLoading]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,11 +156,27 @@ export const ChatView: React.FC<ChatViewProps> = ({
     setFeedbackMap(prev => ({ ...prev, [messageId]: type }));
   };
 
-  // Start in-chat live voice recording
+  const handleOpenWhatsAppFullChat = () => {
+    setWhatsAppModalMessages(messages);
+    setIsWhatsAppModalOpen(true);
+  };
+
+  const handleOpenWhatsAppSingleAnswer = (msg: ChatMessage) => {
+    // Find the user question right before this assistant answer if available
+    const msgIndex = messages.findIndex(m => m.id === msg.id);
+    const relatedUserMsg = msgIndex > 0 && messages[msgIndex - 1].role === 'user' ? messages[msgIndex - 1] : null;
+    const targetSet = relatedUserMsg ? [relatedUserMsg, msg] : [msg];
+    setWhatsAppModalMessages(targetSet);
+    setIsWhatsAppModalOpen(true);
+  };
+
+  // Voice-to-Text Inline Dictation Handlers
   const startVoiceMode = () => {
+    setMicError(null);
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert(t.micUnsupported);
+      setMicError(language === 'hi' ? 'आपके ब्राउज़र में वॉइस इनपुट समर्थित नहीं है।' : 'Voice input is not supported in this browser.');
+      setTimeout(() => setMicError(null), 4000);
       return;
     }
 
@@ -176,47 +185,54 @@ export const ChatView: React.FC<ChatViewProps> = ({
         try { recognitionRef.current.abort(); } catch (_) {}
       }
 
-      PortalSpeaker.stop(); // Stop speaker so assistant doesn't talk over user
+      PortalSpeaker.stop(); // Stop speaker so assistant doesn't speak over user dictation
       const recognition = new SpeechRecognition();
       recognition.lang = getLanguageCode(language);
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
 
-      setVoiceTranscript('');
-      setVoiceInterim('');
+      // Capture currently typed text as base prefix
+      baseInputTextRef.current = inputText;
       setIsVoiceActive(true);
+
+      let accumulatedFinal = '';
 
       recognition.onresult = (event: any) => {
         let interim = '';
-        let final = '';
+        let currentFinal = '';
 
         for (let i = 0; i < event.results.length; i++) {
           const res = event.results[i];
           if (res.isFinal) {
-            final += res[0].transcript + ' ';
+            currentFinal += res[0].transcript + ' ';
           } else {
             interim += res[0].transcript;
           }
         }
 
-        if (final) {
-          setVoiceTranscript(prev => (prev ? prev + ' ' + final : final).trim());
-        }
-        setVoiceInterim(interim);
+        accumulatedFinal = currentFinal;
+        const base = baseInputTextRef.current ? baseInputTextRef.current.trim() : '';
+        const spoken = (accumulatedFinal + interim).trim();
+        const fullText = base ? `${base} ${spoken}` : spoken;
+        setInputText(fullText);
       };
 
       recognition.onerror = (e: any) => {
-        console.warn('Speech recognition error:', e);
+        console.warn('Speech recognition event:', e.error);
         if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
           setIsVoiceActive(false);
-          alert('Microphone access was denied. Please allow microphone permissions in your browser.');
+          setMicError(language === 'hi' ? 'माइक्रोफ़ोन अनुमति की आवश्यकता है।' : 'Microphone permission denied. Please allow microphone access.');
+          setTimeout(() => setMicError(null), 4000);
+        } else if (e.error === 'no-speech') {
+          // Quietly handled without crashing
+        } else if (e.error !== 'aborted') {
+          setIsVoiceActive(false);
         }
       };
 
       recognition.onend = () => {
-        // Auto restart if still in voice active mode
-        // Only keep active if user didn't explicitly close
+        setIsVoiceActive(false);
       };
 
       recognition.start();
@@ -224,10 +240,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
     } catch (e) {
       console.warn('Could not start recognition:', e);
       setIsVoiceActive(false);
+      setMicError(language === 'hi' ? 'वॉइस इनपुट शुरू करने में त्रुटि।' : 'Could not initialize voice input.');
+      setTimeout(() => setMicError(null), 4000);
     }
   };
 
-  // Stop recording and preserve text in input
   const stopVoiceMode = () => {
     if (recognitionRef.current) {
       try {
@@ -235,33 +252,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
       } catch (_) {}
       recognitionRef.current = null;
     }
-    const combined = (voiceTranscript + ' ' + voiceInterim).trim();
-    if (combined) {
-      setInputText(combined);
-    }
     setIsVoiceActive(false);
-    setVoiceInterim('');
-    setVoiceTranscript('');
-    setShowVoiceTemplates(false);
   };
 
-  // Send captured voice question immediately
-  const handleSendVoiceQuery = () => {
-    const combined = (voiceTranscript + ' ' + voiceInterim).trim() || inputText.trim();
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (_) {}
-      recognitionRef.current = null;
-    }
-    setIsVoiceActive(false);
-    setVoiceInterim('');
-    setVoiceTranscript('');
-    setShowVoiceTemplates(false);
-
-    if (combined && !isLoading) {
-      onSendMessage(combined);
-      setInputText('');
+  const handleToggleVoiceMode = () => {
+    if (isVoiceActive) {
+      stopVoiceMode();
+    } else {
+      startVoiceMode();
     }
   };
 
@@ -271,12 +269,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
   return (
     <div id="chat-view-container" className="flex flex-col h-[calc(100vh-65px)] bg-slate-50">
       {/* Top chat action header */}
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-8 py-3 shrink-0 flex items-center justify-between shadow-2xs flex-wrap gap-2">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shrink-0 flex items-center justify-between shadow-2xs">
         <div className="flex items-center gap-3">
           <button
             id="chat-back-btn"
             onClick={onBack}
-            className="p-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
             title={t.backBtn}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -285,67 +283,64 @@ export const ChatView: React.FC<ChatViewProps> = ({
             <h2 className="font-bold text-sm sm:text-base text-slate-900 leading-tight">
               {categoryTitle || t.chatHeading}
             </h2>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-              <span>Verified Government RAG Grounded</span>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+              <span className="text-[11px] font-medium text-slate-500">Verified Legal RAG</span>
             </div>
           </div>
         </div>
 
-        {/* Chat Actions & Voice Controls */}
+        {/* Minimalist Chat Header Actions */}
         <div className="flex items-center gap-2">
-          {/* Live In-Chat Voice Assistant Trigger */}
+          {/* Send Full Chat on WhatsApp Button */}
           <button
-            id="chat-open-voice-modal-btn"
-            onClick={() => {
-              if (isVoiceActive) {
-                stopVoiceMode();
-              } else {
-                startVoiceMode();
-              }
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all shadow-2xs cursor-pointer ${
-              isVoiceActive
-                ? 'bg-emerald-600 text-white border border-emerald-700 animate-pulse'
-                : 'text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200'
+            id="chat-whatsapp-share-btn"
+            onClick={handleOpenWhatsAppFullChat}
+            disabled={messages.length === 0}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs border transition-all cursor-pointer ${
+              messages.length > 0
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 font-bold shadow-2xs'
+                : 'bg-slate-50 text-slate-400 border-slate-200 opacity-60 cursor-not-allowed'
             }`}
-            title="Toggle in-chat voice assistant"
+            title={language === 'hi' ? 'पूरी बातचीत व्हाट्सएप पर भेजें' : 'Send full chat transcript on WhatsApp'}
           >
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{isVoiceActive ? 'Listening...' : t.voiceModeBtn}</span>
+            {/* WhatsApp Logo Icon */}
+            <svg className="w-3.5 h-3.5 fill-[#25D366] text-[#25D366] shrink-0" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.276-.1-.476-.15-.677.15-.2.301-.777.978-.953 1.18-.175.2-.351.226-.652.076-.301-.15-1.27-.468-2.42-1.493-.895-.798-1.5-1.784-1.675-2.085-.176-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.15-.175.2-.301.301-.502.101-.2.05-.376-.025-.526-.075-.15-.677-1.63-.928-2.234-.244-.588-.493-.508-.677-.518-.175-.01-.376-.01-.577-.01-.2 0-.526.075-.802.376-.276.301-1.053 1.028-1.053 2.508 0 1.48 1.078 2.909 1.229 3.11.15.2 2.122 3.24 5.14 4.544.718.31 1.278.495 1.716.634.721.23 1.378.197 1.897.12.577-.087 1.78-.727 2.03-1.43.251-.703.251-1.304.176-1.43-.075-.126-.276-.201-.577-.351zM12.04 2C6.545 2 2.08 6.465 2.08 11.96c0 1.838.497 3.562 1.365 5.05L2 22l5.147-1.352a9.92 9.92 0 004.893 1.272c5.495 0 9.96-4.465 9.96-9.96S17.535 2 12.04 2zm0 18.173a8.21 8.21 0 01-4.19-1.144l-.3-.178-3.115.818.832-3.036-.195-.312a8.22 8.22 0 01-1.262-4.36c0-4.54 3.693-8.233 8.23-8.233 4.537 0 8.23 3.693 8.23 8.233 0 4.54-3.693 8.232-8.23 8.232z" />
+            </svg>
+            <span className="hidden sm:inline font-bold">{language === 'hi' ? 'व्हाट्सएप' : 'WhatsApp'}</span>
           </button>
 
           {/* Auto-Speak Toggle */}
           <button
             id="chat-toggle-autospeak-btn"
             onClick={() => setAutoSpeakEnabled(!autoSpeakEnabled)}
-            className={`hidden md:flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg border transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs border transition-all cursor-pointer ${
               autoSpeakEnabled
                 ? 'bg-slate-900 text-white border-slate-900 font-medium'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                : 'bg-white text-slate-500 border-slate-200 hover:text-slate-900 hover:bg-slate-50'
             }`}
-            title={autoSpeakEnabled ? 'Auto-speak enabled' : 'Enable auto-speak'}
+            title={autoSpeakEnabled ? 'Auto-Voice response: ON' : 'Auto-Voice response: OFF'}
           >
-            {autoSpeakEnabled ? <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> : <VolumeX className="w-3.5 h-3.5 text-slate-400" />}
-            <span>{autoSpeakEnabled ? 'Auto-Voice: ON' : 'Auto-Voice: OFF'}</span>
+            {autoSpeakEnabled ? <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> : <VolumeX className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{autoSpeakEnabled ? 'Voice Reply: ON' : 'Voice Reply: OFF'}</span>
           </button>
 
           {/* New Chat */}
           <button
             id="chat-new-conversation-btn"
             onClick={onNewChat}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+            className="p-2 text-slate-500 hover:text-slate-900 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
             title={t.newChat}
           >
-            <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-            <span className="hidden sm:inline">{t.newChat}</span>
+            <RotateCcw className="w-4 h-4" />
           </button>
 
           {/* Clear Chat */}
           <button
             id="chat-clear-conversation-btn"
             onClick={onClearChat}
-            className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+            className="p-2 text-slate-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition-colors cursor-pointer"
             title={t.clearChat}
           >
             <Trash2 className="w-4 h-4" />
@@ -413,10 +408,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     {/* Trust source indicator & Audio Controls bar */}
                     <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
                       <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
-                        {msg.structured?.sourceType === 'DRIVE_DOCUMENT' ? (
+                        {msg.structured?.sourceType === 'DRIVE_DOCUMENT' || msg.structured?.sourceType === 'KNOWLEDGE_BASE' ? (
                           <div className="flex items-center gap-1 text-emerald-700 font-bold">
                             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span>Google Drive RAG Grounded</span>
+                            <span>{language === 'hi' ? 'सत्यापित वैधानिक ज्ञानकोष' : 'Statutory Knowledge Base'}</span>
                           </div>
                         ) : (
                           <>
@@ -455,6 +450,18 @@ export const ChatView: React.FC<ChatViewProps> = ({
                               <span>{t.readAloud}</span>
                             </>
                           )}
+                        </button>
+
+                        {/* WhatsApp share single answer button */}
+                        <button
+                          onClick={() => handleOpenWhatsAppSingleAnswer(msg)}
+                          className="inline-flex items-center gap-1 text-xs text-emerald-700 hover:text-emerald-900 p-1.5 rounded hover:bg-emerald-50 transition-colors"
+                          title={language === 'hi' ? 'यह उत्तर व्हाट्सएप पर भेजें' : 'Share this answer on WhatsApp'}
+                        >
+                          <svg className="w-3.5 h-3.5 fill-current text-[#25D366]" viewBox="0 0 24 24">
+                            <path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.276-.1-.476-.15-.677.15-.2.301-.777.978-.953 1.18-.175.2-.351.226-.652.076-.301-.15-1.27-.468-2.42-1.493-.895-.798-1.5-1.784-1.675-2.085-.176-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.15-.175.2-.301.301-.502.101-.2.05-.376-.025-.526-.075-.15-.677-1.63-.928-2.234-.244-.588-.493-.508-.677-.518-.175-.01-.376-.01-.577-.01-.2 0-.526.075-.802.376-.276.301-1.053 1.028-1.053 2.508 0 1.48 1.078 2.909 1.229 3.11.15.2 2.122 3.24 5.14 4.544.718.31 1.278.495 1.716.634.721.23 1.378.197 1.897.12.577-.087 1.78-.727 2.03-1.43.251-.703.251-1.304.176-1.43-.075-.126-.276-.201-.577-.351zM12.04 2C6.545 2 2.08 6.465 2.08 11.96c0 1.838.497 3.562 1.365 5.05L2 22l5.147-1.352a9.92 9.92 0 004.893 1.272c5.495 0 9.96-4.465 9.96-9.96S17.535 2 12.04 2zm0 18.173a8.21 8.21 0 01-4.19-1.144l-.3-.178-3.115.818.832-3.036-.195-.312a8.22 8.22 0 01-1.262-4.36c0-4.54 3.693-8.233 8.23-8.233 4.537 0 8.23 3.693 8.23 8.233 0 4.54-3.693 8.232-8.23 8.232z" />
+                          </svg>
+                          <span className="hidden sm:inline text-[11px] font-semibold text-emerald-800">WhatsApp</span>
                         </button>
 
                         <button
@@ -533,49 +540,43 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           <span>{t.sourceLabel}</span>
                         </h4>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           {msg.structured.sources.map((src, sIdx) => {
                             const isDriveDoc = src.sourceType === 'DRIVE_DOCUMENT' || src.authority?.toLowerCase().includes('drive');
                             return (
                               <div
                                 key={src.id || sIdx}
-                                className={`border rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
+                                className={`border rounded-lg p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs ${
                                   isDriveDoc
                                     ? 'bg-emerald-50/70 border-emerald-200'
-                                    : 'bg-slate-50 border-slate-200'
+                                    : 'bg-slate-50/90 border-slate-200'
                                 }`}
                               >
-                                <div className="space-y-1">
-                                  <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                                    {isDriveDoc ? (
-                                      <span className="p-1 bg-emerald-100 text-emerald-800 rounded font-semibold text-[10px] uppercase tracking-wide">
-                                        Google Drive Doc
+                                <div className="space-y-0.5 min-w-0 flex-1">
+                                  <div className="font-semibold text-slate-900 text-xs sm:text-[13px] flex items-center gap-1.5 leading-snug">
+                                    <FileText className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                                    <span className="truncate">{src.documentName || src.title}</span>
+                                  </div>
+                                  <div className="text-[11px] text-slate-600 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                    <span><strong>Authority:</strong> {src.authority}</span>
+                                    {src.section && (
+                                      <span>
+                                        • <strong>{t.sectionLabel}:</strong> {src.section}
+                                        {src.pageNumber && <span className="ml-1 text-slate-500">({src.pageNumber})</span>}
                                       </span>
-                                    ) : (
-                                      <FileText className="w-4 h-4 text-slate-700 shrink-0" />
                                     )}
-                                    <span>{src.documentName || src.title}</span>
                                   </div>
-                                  <div className="text-slate-600">
-                                    <strong>Authority:</strong> {src.authority}
-                                  </div>
-                                  {src.section && (
-                                    <div className="text-slate-700">
-                                      <strong>{t.sectionLabel}:</strong> {src.section}
-                                      {src.pageNumber && <span className="ml-2 text-slate-500">({src.pageNumber})</span>}
-                                    </div>
-                                  )}
                                   {src.snippet && (
-                                    <p className="text-[11px] text-slate-500 bg-white/70 p-1.5 rounded border border-slate-200 line-clamp-2 italic">
+                                    <p className="text-[10px] text-slate-500 bg-white/80 p-1 rounded border border-slate-200 line-clamp-2 italic mt-0.5">
                                       "{src.snippet}"
                                     </p>
                                   )}
                                 </div>
 
-                                <div className="flex items-center gap-2 shrink-0">
+                                <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
                                   <button
                                     onClick={() => onSelectDocument(src.documentName || src.title, src.section, src.officialUrl)}
-                                    className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 font-semibold rounded-lg border border-slate-300 text-xs transition-colors shadow-2xs cursor-pointer"
+                                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 font-medium rounded-md border border-slate-300 text-[11px] transition-colors shadow-2xs cursor-pointer"
                                   >
                                     {t.viewDocument}
                                   </button>
@@ -584,10 +585,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
                                       href={src.officialUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="p-1.5 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 transition-colors shadow-2xs"
+                                      className="p-1 bg-white hover:bg-slate-100 text-slate-800 rounded-md border border-slate-300 transition-colors shadow-2xs"
                                       title={t.openOfficialSource}
                                     >
-                                      <ExternalLink className="w-3.5 h-3.5 text-slate-600" />
+                                      <ExternalLink className="w-3 h-3 text-slate-600" />
                                     </a>
                                   )}
                                 </div>
@@ -618,11 +619,35 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       </div>
                     )}
 
-                    {/* 5. Legal Disclaimer & Feedback Bar */}
+                    {/* 5. Legal Disclaimer & Recheck Governing Body Notice */}
+                    {msg.structured?.isInternetFallback && (
+                      <div className="bg-amber-50/80 border border-amber-200/90 rounded-xl p-3 text-xs text-amber-950 flex items-start gap-2.5">
+                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <div className="font-bold text-amber-900 flex items-center gap-1.5">
+                            <span>{language === 'hi' ? 'इंटरनेट/वेब स्रोत आधारित उत्तर - आधिकारिक निकाय से पुनः जांच अवश्य करें' : 'Web/Internet Sourced Answer - Statutory Recheck Advisory'}</span>
+                          </div>
+                          <p className="text-[12px] leading-relaxed text-amber-900/90">
+                            {msg.structured.legalDisclaimer ||
+                              (language === 'hi'
+                                ? 'यह उत्तर स्थानीय वैधानिक ज्ञानकोष में उपलब्ध न होने के कारण सार्वजनिक वेब स्रोतों से लिया गया है। कृपया किसी भी विधिक, प्रशासनिक या वित्तीय कदम से पूर्व संबंधित अधिनियम, राजपत्र अथवा सक्षम सरकारी प्राधिकरण (जैसे सहकारिता मंत्रालय / राज्य सहकारी निबंधक) से पुनः जांच (Recheck) अवश्य करें।'
+                                : 'This response was retrieved from public internet/web sources as it was not present in the local repository. Please recheck with the official law, gazette, or competent governing body before acting.')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Standard Legal Disclaimer & Feedback Bar */}
                     <div className="border-t border-slate-100 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-500">
                       <div className="flex items-center gap-1.5">
                         <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{t.legalDisclaimer}</span>
+                        <span>
+                          {msg.structured?.isInternetFallback
+                            ? (language === 'hi'
+                                ? 'सूचना: किसी भी निर्णय से पहले आधिकारिक सरकारी राजपत्र या वैधानिक प्राधिकरण से परामर्श लें।'
+                                : 'Note: Please verify with official statutory authorities or gazette notifications.')
+                            : (msg.structured?.legalDisclaimer || t.legalDisclaimer)}
+                        </span>
                       </div>
 
                       {/* Helpful / Not Helpful Feedback */}
@@ -668,180 +693,118 @@ export const ChatView: React.FC<ChatViewProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Bottom input area: Smoothly toggles between Standard Text input and Fluent Audio Bar */}
-      <div className={`border-t transition-all p-4 shrink-0 shadow-sm ${
-        isVoiceActive ? 'bg-[#0f1117] border-slate-800' : 'bg-white border-slate-200'
-      }`}>
-        <div className="max-w-4xl mx-auto">
-          {isVoiceActive ? (
-            /* Live Audio Input UI matching user screenshot */
-            <div className="w-full flex flex-col items-center py-2 animate-fade-in">
-              {/* Header Title: "The mic is yours, [Name]" */}
-              <h3 className="text-lg sm:text-2xl font-light text-slate-100 tracking-tight mb-2 text-center select-none">
-                The mic is yours, {userName}
-              </h3>
-
-              {/* Real-time transcription feedback */}
-              <div className="min-h-[24px] mb-3 text-center px-4 max-w-xl">
-                {voiceTranscript || voiceInterim ? (
-                  <p className="text-xs sm:text-sm font-medium text-blue-300 bg-slate-900/80 px-3.5 py-1 rounded-full border border-blue-500/30 truncate shadow-inner">
-                    "{voiceTranscript ? voiceTranscript + ' ' : ''}{voiceInterim}"
-                  </p>
-                ) : (
-                  <p className="text-xs text-slate-400">
-                    {language === 'hi'
-                      ? 'स्पष्ट रूप से अपना प्रश्न बोलें...'
-                      : language === 'mr'
-                      ? 'आपला प्रश्न स्पष्टपणे बोला...'
-                      : language === 'bn'
-                      ? 'আপনার প্রশ্নটি স্পষ্টভাবে বলুন...'
-                      : 'Speak your question clearly...'}
-                  </p>
-                )}
+      {/* Bottom input area: Clean, minimalist text bar with Left Speech-to-Speech button */}
+      <div className="border-t transition-all px-4 py-3 shrink-0 bg-white border-slate-200">
+        <div className="max-w-3xl mx-auto">
+          {/* Inline Mic Notification */}
+          {micError && (
+            <div className="mb-2 p-2 px-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center justify-between animate-in fade-in duration-200">
+              <div className="flex items-center gap-1.5 font-medium">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span>{micError}</span>
               </div>
+              <button
+                type="button"
+                onClick={() => setMicError(null)}
+                className="text-amber-600 hover:text-amber-900 text-xs font-bold px-1"
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
-              {/* Quick Suggestion Templates Popover */}
-              {showVoiceTemplates && (
-                <div className="w-full max-w-xl mb-3 bg-[#181a20] border border-slate-700 rounded-2xl p-3 shadow-xl">
-                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <HelpCircle className="w-3.5 h-3.5 text-blue-400" />
-                    <span>Quick Voice Prompts</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      'How to register a new PACS cooperative?',
-                      'What are KCC loan eligibility rules?',
-                      'Tell me about Model PACS bye-laws',
-                      'What is PM-Kisan cooperative subsidy?'
-                    ].map((template, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => {
-                          setVoiceTranscript(template);
-                          setShowVoiceTemplates(false);
-                        }}
-                        className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-700 transition-colors text-left"
-                      >
-                        {template}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Dark Pill Audio Bar */}
-              <div className="w-full max-w-2xl bg-[#181a20] border border-slate-700/80 rounded-full py-2.5 px-4 sm:px-5 flex items-center justify-between shadow-2xl">
-                {/* Left: Plus (+) Button */}
+          {/* Input Form with Left Speech-to-Speech Icon button and Right Send controls */}
+          <div>
+            <div className="flex items-center gap-2">
+              {/* Left Side: Speech-to-Speech Full Overlay Trigger */}
+              {onOpenSpeechToSpeech && (
                 <button
                   type="button"
-                  id="voice-bar-plus-btn"
-                  onClick={() => setShowVoiceTemplates(!showVoiceTemplates)}
-                  className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
-                  title="Quick prompt templates"
+                  id="chat-speech-to-speech-left-btn"
+                  onClick={onOpenSpeechToSpeech}
+                  className="h-11 px-3 sm:px-3.5 flex items-center gap-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 hover:text-emerald-950 transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs group"
+                  title={language === 'hi' ? 'स्पीच-टू-स्पीच लाइव वॉइस (फुल स्क्रीन)' : 'Speech-to-Speech Live Voice Assistant'}
                 >
-                  <Plus className="w-5 h-5" />
+                  <Radio className="w-4 h-4 text-emerald-600 animate-pulse group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-semibold hidden sm:inline">
+                    {language === 'hi' ? 'स्पीच-टू-स्पीच' : 'Live Voice'}
+                  </span>
                 </button>
+              )}
 
-                {/* Center: Dotted line & Animated Sound Waveform Bars */}
-                <div className="flex-1 flex items-center justify-center px-2 sm:px-4 overflow-hidden">
-                  {/* Left dots */}
-                  <div className="hidden sm:flex items-center gap-1 text-slate-500 font-mono text-xs select-none tracking-tighter shrink-0">
-                    <span>••••••••••••</span>
-                  </div>
-
-                  {/* Equalizer Audio Frequency Bars */}
-                  <div className="flex items-center justify-center gap-[3px] h-7 mx-3">
-                    {[0.35, 0.6, 0.9, 1.0, 0.7, 0.95, 0.45, 0.85, 0.65, 1.0, 0.8, 0.9, 0.5, 0.75, 0.4].map((factor, i) => {
-                      const height = 5 + Math.abs(Math.sin((waveTick * 0.35) + i * 0.65)) * 18 * factor;
-                      return (
-                        <span
-                          key={i}
-                          className="w-[2.5px] sm:w-[3px] bg-slate-300 rounded-full transition-all duration-75"
-                          style={{ height: `${Math.max(5, height)}px` }}
-                        />
-                      );
-                    })}
-                  </div>
-
-                  {/* Right dots */}
-                  <div className="hidden sm:flex items-center gap-1 text-slate-500 font-mono text-xs select-none tracking-tighter shrink-0">
-                    <span>••••••••••••</span>
-                  </div>
-                </div>
-
-                {/* Right Action Buttons: Stop (■) & Send (↑) */}
-                <div className="flex items-center gap-2 shrink-0">
-                  {/* Stop / Cancel Recording Button */}
-                  <button
-                    type="button"
-                    id="voice-bar-stop-btn"
-                    onClick={stopVoiceMode}
-                    className="w-9 h-9 rounded-full bg-[#2a2d36] hover:bg-[#343842] text-white flex items-center justify-center transition-all cursor-pointer shadow-sm"
-                    title="Stop recording"
-                  >
-                    <Square className="w-3.5 h-3.5 fill-white text-white" />
-                  </button>
-
-                  {/* Submit / Send Voice Query Button */}
-                  <button
-                    type="button"
-                    id="voice-bar-send-btn"
-                    onClick={handleSendVoiceQuery}
-                    className="w-9 h-9 rounded-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer"
-                    title="Send audio question"
-                  >
-                    <ArrowUp className="w-4 h-4 text-white stroke-[2.5]" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-2 text-center text-[11px] text-slate-400 select-none">
-                Tap the blue arrow to ask, or the square button to cancel
-              </div>
-            </div>
-          ) : (
-            /* Standard text input form with audio mic trigger button */
-            <div>
-              <form onSubmit={handleSubmit} className="relative flex items-center">
+              {/* Main Input Form */}
+              <form onSubmit={handleSubmit} className="relative flex-1 flex items-center">
                 <input
                   id="chat-user-input"
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  placeholder={t.askPlaceholder}
+                  placeholder={
+                    isVoiceActive
+                      ? (language === 'hi' ? 'सुन रहा हूँ... बोलें' : 'Listening... Speak now')
+                      : t.askPlaceholder
+                  }
                   disabled={isLoading}
-                  className="w-full bg-slate-50 border border-slate-300 focus:border-slate-500 focus:bg-white text-slate-900 rounded-xl py-3.5 pl-4 pr-24 text-sm sm:text-base outline-none transition-all"
+                  className={`w-full bg-slate-50 focus:bg-white border text-slate-900 placeholder:text-slate-400 rounded-2xl py-3 pl-4 pr-22 text-sm outline-none transition-all ${
+                    isVoiceActive
+                      ? 'border-emerald-400 ring-2 ring-emerald-100 bg-emerald-50/20'
+                      : 'border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-100'
+                  }`}
                 />
 
-                <div className="absolute right-2 flex items-center gap-1">
+                <div className="absolute right-1.5 flex items-center gap-1">
+                  {/* Dictation / Inline Mic button */}
                   <button
                     type="button"
                     id="chat-mic-btn"
-                    onClick={startVoiceMode}
-                    className="p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
-                    title="Speak question (Live Voice Mode)"
+                    onClick={handleToggleVoiceMode}
+                    className={`p-2 rounded-xl transition-all cursor-pointer ${
+                      isVoiceActive
+                        ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 animate-pulse ring-2 ring-rose-300'
+                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                    title={
+                      isVoiceActive
+                        ? (language === 'hi' ? 'बोलना बंद करें' : 'Stop voice typing')
+                        : (language === 'hi' ? 'बोलकर टाइप करें' : 'Voice to text')
+                    }
                   >
-                    <Mic className="w-4 h-4 text-slate-600 hover:text-blue-600" />
+                    {isVoiceActive ? (
+                      <Square className="w-3.5 h-3.5 fill-current text-rose-600" />
+                    ) : (
+                      <Mic className="w-4 h-4 text-slate-600" />
+                    )}
                   </button>
 
+                  {/* Send Button */}
                   <button
                     type="submit"
                     id="chat-send-btn"
                     disabled={!inputText.trim() || isLoading}
-                    className="p-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white rounded-lg transition-colors shadow-xs cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl transition-all shadow-xs cursor-pointer"
+                    title="Send message"
                   >
-                    <Send className="w-4 h-4" />
+                    <ArrowUp className="w-4 h-4 stroke-[2.5]" />
                   </button>
                 </div>
               </form>
-              <div className="mt-1.5 text-center text-[11px] text-slate-400">
-                Official knowledge-grounded assistant • Multi-State Co-operative Societies Act & Model PACS Bye-laws
-              </div>
             </div>
-          )}
+
+            <div className="mt-1.5 text-center text-[11px] text-slate-400">
+              Official statutory knowledge • Multi-State Co-operative Societies Act & Model PACS Bye-laws
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* WhatsApp Full Chat / Answer Share Modal */}
+      <WhatsAppShareModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={() => setIsWhatsAppModalOpen(false)}
+        messages={whatsAppModalMessages || messages}
+        language={language}
+        user={user}
+      />
     </div>
   );
 };

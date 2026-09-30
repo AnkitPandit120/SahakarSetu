@@ -5,16 +5,18 @@ import { ChatView } from './components/ChatView';
 import { GuidedAssistanceView } from './components/GuidedAssistanceView';
 import { ServicesView } from './components/ServicesView';
 import { SchemesView } from './components/SchemesView';
+import { FaqView } from './components/FaqView';
 import { AboutView } from './components/AboutView';
-import { DriveFoldersView } from './components/DriveFoldersView';
+import { AdminPanel } from './components/AdminPanel';
 import { AuthModal } from './components/AuthModal';
 import { DocumentModal } from './components/DocumentModal';
+import { SpeechToSpeechModal } from './components/SpeechToSpeechModal';
 import { Footer } from './components/Footer';
 import { ChatMessage, Language, StructuredAnswer, TopicItem, CategoryItem, UserProfile } from './types';
 import { TRANSLATIONS } from './data/translations';
 
 export function App() {
-  const [currentTab, setCurrentTab] = useState<'home' | 'guided' | 'chat' | 'services' | 'schemes' | 'drive' | 'about'>('home');
+  const [currentTab, setCurrentTab] = useState<'home' | 'guided' | 'chat' | 'services' | 'schemes' | 'faq' | 'about' | 'admin'>('home');
   const [language, setLanguage] = useState<Language>('en');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -26,6 +28,9 @@ export function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
+
+  // Speech-to-Speech Live Voice Modal
+  const [speechToSpeechOpen, setSpeechToSpeechOpen] = useState(false);
 
   // Document modal state
   const [docModalOpen, setDocModalOpen] = useState(false);
@@ -83,24 +88,36 @@ export function App() {
 
       const data = await response.json();
 
+      const isWebFallback = data.sourceType === 'web' || data.isInternetFallback;
+      const defaultDisclaimer =
+        isWebFallback
+          ? (language === 'hi'
+              ? 'महत्वपूर्ण अस्वीकरण (Disclaimer): यह उत्तर सार्वजनिक इंटरनेट/वेब स्रोतों से संकलित किया गया है। कानूनी या वित्तीय कार्रवाई से पहले कृपया आधिकारिक कानून, राजपत्र या संबंधित सरकारी निकाय (cooperation.gov.in / निबंधक कार्यालय) से पुनः जांच अवश्य करें।'
+              : 'Important Notice: This answer is sourced from public internet/web records as it was not present in the local statutory repository. Please recheck with the official law, gazette, or governing body before taking legal/administrative action.')
+          : (language === 'hi'
+              ? 'यह जानकारी वैधानिक अधिनियमों, उप-नियमों और आधिकारिक सरकारी ज्ञानकोष पर आधारित है।'
+              : 'This information is verified from statutory acts, model by-laws, and official government records.');
+
       const structuredAnswer: StructuredAnswer = {
         answer: data.answer || '',
-        sourceType: data.sourceType === 'rag' ? 'DRIVE_DOCUMENT' : 'VERIFIED_WEB',
-        sources: (data.sources || []).map((s: any, idx: number) => ({
-          id: `src-${idx}-${Date.now()}`,
-          title: s.title || 'Official Document',
-          authority: s.authority || 'Government of India',
-          documentName: s.title || 'Official Document',
-          section: s.section || 'General Provisions',
-          pageNumber: s.page || s.pageNumber,
-          officialUrl: s.officialUrl || s.driveUrl || 'https://cooperation.gov.in',
-          sourceType: s.sourceType === 'rag' || s.driveUrl ? 'DRIVE_DOCUMENT' : 'VERIFIED_WEB'
-        })),
+        sourceType: data.sourceType === 'rag' ? 'KNOWLEDGE_BASE' : 'VERIFIED_WEB',
+        isInternetFallback: isWebFallback,
+        sources: (data.sources || []).map((s: any, idx: number) => {
+          const rawUrl = s.officialUrl || s.driveUrl || 'https://cooperation.gov.in';
+          const cleanUrl = rawUrl.includes('drive.google.com') ? 'https://cooperation.gov.in' : rawUrl;
+          return {
+            id: `src-${idx}-${Date.now()}`,
+            title: s.title || 'Official Document',
+            authority: s.authority || 'Government of India',
+            documentName: s.title || 'Official Document',
+            section: s.section || 'General Provisions',
+            pageNumber: s.page || s.pageNumber,
+            officialUrl: cleanUrl,
+            sourceType: data.sourceType === 'rag' ? 'KNOWLEDGE_BASE' : 'VERIFIED_WEB'
+          };
+        }),
         followUpQuestions: data.followUpQuestions || [],
-        legalDisclaimer:
-          language === 'hi'
-            ? 'यह जानकारी आपके गूगल ड्राइव ज्ञानकोष और आधिकारिक सरकारी स्रोतों पर आधारित है।'
-            : 'This information is strictly verified from your Google Drive knowledge base and statutory portals.',
+        legalDisclaimer: data.disclaimer || defaultDisclaimer,
         language
       };
 
@@ -121,7 +138,7 @@ export function App() {
         text: 'I apologize, an error occurred while querying the knowledge base. Please try asking again.',
         timestamp: new Date().toISOString(),
         structured: {
-          answer: 'We encountered an issue querying the Google Drive knowledge base. Please check your connection or select a topic from Guided Assistance.',
+          answer: 'We encountered an issue querying the statutory knowledge base. Please check your connection or select a topic from Guided Assistance.',
           importantNotes: ['Official helplines: Kisan Call Centre 1800-180-1551, PMFBY Helpline 14447.'],
           sources: [
             {
@@ -140,7 +157,10 @@ export function App() {
             'What is the 72-hour PMFBY crop loss reporting rule?',
             'What are cooperative member rights?'
           ],
-          legalDisclaimer: 'This platform provides information and guidance based on official public records.',
+          legalDisclaimer:
+            language === 'hi'
+              ? 'यह जानकारी वैधानिक अधिनियमों और आधिकारिक सरकारी पोर्टलों पर आधारित है।'
+              : 'This platform provides information and guidance based on official public records and statutory guidelines.',
           language
         }
       };
@@ -208,6 +228,7 @@ export function App() {
         user={user}
         openAuthModal={() => setIsAuthOpen(true)}
         onOpenVoiceMode={handleOpenVoiceInChat}
+        onOpenSpeechToSpeech={() => setSpeechToSpeechOpen(true)}
       />
 
       {/* Main View Router */}
@@ -220,6 +241,7 @@ export function App() {
               onOpenGuided={handleOpenGuided}
               onOpenDirectChat={handleOpenDirectChat}
               onOpenVoiceMode={handleOpenVoiceInChat}
+              onOpenSpeechToSpeech={() => setSpeechToSpeechOpen(true)}
             />
 
             {/* Quick overview of key service categories on homepage */}
@@ -385,6 +407,7 @@ export function App() {
             onBookmarkAnswer={handleBookmark}
             bookmarkedIds={bookmarkedIds}
             initialVoiceActive={initialVoiceInChat}
+            onOpenSpeechToSpeech={() => setSpeechToSpeechOpen(true)}
           />
         )}
 
@@ -414,14 +437,28 @@ export function App() {
           />
         )}
 
-        {currentTab === 'drive' && (
-          <DriveFoldersView language={language} />
+        {currentTab === 'faq' && (
+          <FaqView
+            language={language}
+            onAskAi={(question) => {
+              handleSendMessage(question);
+            }}
+            onOpenKnowledgeDoc={handleSelectDocument}
+            onNavigateToTab={(tab) => setCurrentTab(tab)}
+          />
         )}
 
         {currentTab === 'about' && (
           <AboutView
             language={language}
             onOpenKnowledgeDoc={handleSelectDocument}
+          />
+        )}
+
+        {currentTab === 'admin' && (
+          <AdminPanel
+            language={language}
+            onExitToCitizenView={() => setCurrentTab('home')}
           />
         )}
       </main>
@@ -432,8 +469,24 @@ export function App() {
         onClose={() => setIsAuthOpen(false)}
         language={language}
         user={user}
-        onLogin={(loggedInUser) => setUser(loggedInUser)}
-        onLogout={() => setUser(null)}
+        onLogin={(loggedInUser) => {
+          setUser(loggedInUser);
+          if (loggedInUser.role === 'ADMIN') {
+            setCurrentTab('admin');
+          }
+        }}
+        onNavigateToAdmin={() => {
+          setCurrentTab('admin');
+          setIsAuthOpen(false);
+        }}
+        onLogout={() => {
+          setUser(null);
+          localStorage.removeItem('sahakar_admin_token');
+          localStorage.removeItem('sahakar_admin_profile');
+          if (currentTab === 'admin') {
+            setCurrentTab('home');
+          }
+        }}
       />
 
       {/* Document Inspector Modal */}
@@ -443,6 +496,18 @@ export function App() {
         documentTitle={selectedDocTitle}
         sectionName={selectedDocSection}
         officialUrl={selectedDocUrl}
+      />
+
+      {/* Speech-to-Speech Live Conversational Voice Assistant Modal */}
+      <SpeechToSpeechModal
+        isOpen={speechToSpeechOpen}
+        onClose={() => setSpeechToSpeechOpen(false)}
+        language={language}
+        onLanguageChange={setLanguage}
+        onOpenChatWithQuery={(query) => {
+          handleSendMessage(query);
+          setCurrentTab('chat');
+        }}
       />
 
       {/* Public Service Footer (Hidden on full chat view to maximize screen space) */}

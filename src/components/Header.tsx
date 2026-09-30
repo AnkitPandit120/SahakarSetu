@@ -10,19 +10,25 @@ import {
   X,
   Volume2,
   Eye,
-  FileText
+  FileText,
+  Mic,
+  Sparkles,
+  Radio,
+  ShieldCheck,
+  HelpCircle
 } from 'lucide-react';
 import { Language, UserProfile } from '../types';
 import { TRANSLATIONS } from '../data/translations';
 
 interface HeaderProps {
-  currentTab: 'home' | 'guided' | 'chat' | 'services' | 'schemes' | 'drive' | 'about';
-  setCurrentTab: (tab: 'home' | 'guided' | 'chat' | 'services' | 'schemes' | 'drive' | 'about') => void;
+  currentTab: 'home' | 'guided' | 'chat' | 'services' | 'schemes' | 'faq' | 'about' | 'admin';
+  setCurrentTab: (tab: 'home' | 'guided' | 'chat' | 'services' | 'schemes' | 'faq' | 'about' | 'admin') => void;
   language: Language;
   setLanguage: (lang: Language) => void;
   user: UserProfile | null;
   openAuthModal: () => void;
   onOpenVoiceMode?: () => void;
+  onOpenSpeechToSpeech?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -31,7 +37,8 @@ export const Header: React.FC<HeaderProps> = ({
   language,
   setLanguage,
   user,
-  openAuthModal
+  openAuthModal,
+  onOpenSpeechToSpeech
 }) => {
   const t = TRANSLATIONS[language];
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -287,16 +294,16 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
-              id="nav-drive-btn"
-              onClick={() => setCurrentTab('drive')}
+              id="nav-faq-btn"
+              onClick={() => setCurrentTab('faq')}
               className={`px-4 py-3 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                currentTab === 'drive'
+                currentTab === 'faq'
                   ? 'bg-[#06243c] text-amber-300 border-b-4 border-amber-400 font-bold'
                   : 'text-slate-100 hover:bg-[#082e4b] hover:text-white'
               }`}
             >
-              <FileText className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{language === 'hi' ? 'गूगल ड्राइव डायरेक्टरी' : 'Drive Folders'}</span>
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>{t.navFaq || (language === 'hi' ? 'प्रश्नोत्तरी (FAQ)' : 'FAQs')}</span>
             </button>
 
             <button
@@ -359,13 +366,14 @@ export const Header: React.FC<HeaderProps> = ({
             {language === 'hi' ? 'विधिक अधिनियम व नियम' : 'Acts & Bye-Laws Navigator'}
           </button>
           <button
-            onClick={() => { setCurrentTab('drive'); setMobileMenuOpen(false); }}
+            id="mobile-nav-faq-btn"
+            onClick={() => { setCurrentTab('faq'); setMobileMenuOpen(false); }}
             className={`w-full text-left px-3 py-2.5 rounded text-sm font-medium flex items-center gap-2 ${
-              currentTab === 'drive' ? 'bg-[#06243c] text-amber-300 font-bold' : 'hover:bg-[#082e4b]'
+              currentTab === 'faq' ? 'bg-[#06243c] text-amber-300 font-bold' : 'hover:bg-[#082e4b]'
             }`}
           >
-            <FileText className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{language === 'hi' ? 'गूगल ड्राइव डायरेक्टरी' : 'Google Drive Folders'}</span>
+            <HelpCircle className="w-4 h-4 text-amber-300" />
+            <span>{t.navFaq || (language === 'hi' ? 'प्रश्नोत्तरी (FAQ)' : 'FAQs')}</span>
           </button>
           <button
             onClick={() => { setCurrentTab('about'); setMobileMenuOpen(false); }}

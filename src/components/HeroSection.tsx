@@ -11,10 +11,14 @@ import {
   Scale,
   Users,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  Mic,
+  Sparkles,
+  Radio
 } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../data/translations';
+import { GovernmentImageSlider } from './GovernmentImageSlider';
 
 interface HeroSectionProps {
   language: Language;
@@ -22,13 +26,15 @@ interface HeroSectionProps {
   onOpenGuided: () => void;
   onOpenDirectChat: () => void;
   onOpenVoiceMode?: () => void;
+  onOpenSpeechToSpeech?: () => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   language,
   onAskQuestion,
   onOpenGuided,
-  onOpenDirectChat
+  onOpenDirectChat,
+  onOpenSpeechToSpeech
 }) => {
   const t = TRANSLATIONS[language];
 
@@ -63,8 +69,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
       </div>
 
-      {/* 2. Official National Statistics Bar & Main Gateways */}
+      {/* 2. Full-Width Government Banner Carousel (Mann Ki Baat, Vibrant Villages, Modi, Yogi, Amit Shah, PACS) */}
+      <GovernmentImageSlider
+        language={language}
+        onSelectQuery={onAskQuestion}
+        onOpenDirectChat={onOpenDirectChat}
+        onOpenGuided={onOpenGuided}
+      />
+
+      {/* 3. Official National Statistics Bar & Main Gateways */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
+
         {/* Statistics Bar */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-2xs text-center">

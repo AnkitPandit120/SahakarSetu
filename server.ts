@@ -6,6 +6,8 @@ import { authRouter } from './src/server/routes/auth';
 import { driveRouter } from './src/server/routes/drive';
 import { ragRouter } from './src/server/routes/rag';
 import { chatRouter } from './src/server/routes/chat';
+import { speechRouter } from './src/server/routes/speech';
+import { adminRouter } from './src/server/routes/admin';
 import { CATEGORIES } from './src/data/categories';
 import { VERIFIED_SCHEMES, VERIFIED_SERVICES } from './src/data/schemesAndServices';
 import { VERIFIED_KNOWLEDGE_DOCUMENTS } from './src/data/knowledgeBase';
@@ -13,7 +15,6 @@ import { vectorStore } from './src/server/services/vectorService';
 import { config } from './src/server/config/env';
 
 dotenv.config();
-dotenv.config({ path: path.resolve(process.cwd(), 'env/.env') });
 
 async function startServer() {
   const app = express();
@@ -27,6 +28,8 @@ async function startServer() {
   app.use('/api/drive', driveRouter);
   app.use('/api/rag', ragRouter);
   app.use('/api/chat', chatRouter);
+  app.use('/api/speech', speechRouter);
+  app.use('/api/admin', adminRouter);
 
   // Health check endpoint
   app.get('/api/health', (req, res) => {
@@ -34,8 +37,6 @@ async function startServer() {
       status: 'ok',
       architecture: 'Full-Stack React + Vite + Express + Gemini RAG',
       geminiConfigured: !!config.geminiApiKey,
-      groqConfigured: !!config.groqApiKey,
-      activeAiProvider: config.geminiApiKey ? 'Gemini 2.5 Flash' : (config.groqApiKey ? 'Groq LLaMA 3.3' : 'Deterministic Offline'),
       driveFolderConfigured: !!config.driveKnowledgeFolderId,
       driveConnected: !!(config.adminAccessToken || config.googleRefreshToken),
       stats: vectorStore.getStats(),
@@ -85,10 +86,21 @@ async function startServer() {
     res.json(VERIFIED_KNOWLEDGE_DOCUMENTS);
   });
 
+  // Download all project images as ZIP archive
+  app.get('/api/download-images', (req, res) => {
+    const zipPath = path.resolve(process.cwd(), 'public/sahakarsetu_all_images.zip');
+    res.download(zipPath, 'sahakarsetu_all_images.zip');
+  });
+
   // 2. VITE MIDDLEWARE (Handles React SPA during dev, static files in prod)
   if (process.env.NODE_ENV !== 'production') {
+    const isHmrDisabled = process.env.DISABLE_HMR === 'true';
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: isHmrDisabled ? false : undefined,
+        watch: isHmrDisabled ? null : {},
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);

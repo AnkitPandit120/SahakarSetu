@@ -19,13 +19,38 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
 }) => {
   if (!isOpen || !documentTitle) return null;
 
-  // Look up document in verified knowledge base
-  const matchedDoc = VERIFIED_KNOWLEDGE_DOCUMENTS.find(
-    doc => doc.title.toLowerCase().includes(documentTitle.toLowerCase()) ||
-           documentTitle.toLowerCase().includes(doc.title.toLowerCase())
-  ) || VERIFIED_KNOWLEDGE_DOCUMENTS[0];
+  const cleanTitle = documentTitle.toLowerCase().trim();
+
+  // Look up document in verified knowledge base by title, filename, category, or ID
+  const matchedDoc = VERIFIED_KNOWLEDGE_DOCUMENTS.find(doc => {
+    const docTitle = doc.title.toLowerCase();
+    const docId = (doc.id || '').toLowerCase();
+    const docFileName = (doc.fileName || '').toLowerCase();
+
+    return (
+      docTitle.includes(cleanTitle) ||
+      cleanTitle.includes(docTitle) ||
+      (docFileName && (docFileName.includes(cleanTitle) || cleanTitle.includes(docFileName))) ||
+      (docId && cleanTitle.includes(docId)) ||
+      (cleanTitle.includes('traffic') && docId.includes('traffic')) ||
+      (cleanTitle.includes('vehicle') && docId.includes('traffic')) ||
+      (cleanTitle.includes('motor') && docId.includes('traffic')) ||
+      (cleanTitle.includes('land') && docId.includes('land')) ||
+      (cleanTitle.includes('svamitva') && docId.includes('land')) ||
+      (cleanTitle.includes('mutation') && docId.includes('land')) ||
+      (cleanTitle.includes('quick_ref') && docId.includes('laws')) ||
+      (cleanTitle.includes('quick reference') && docId.includes('laws')) ||
+      (cleanTitle.includes('farmer') && docId.includes('farmer')) ||
+      (cleanTitle.includes('pacs') && docId.includes('farmer'))
+    );
+  }) || VERIFIED_KNOWLEDGE_DOCUMENTS[0];
 
   const targetUrl = officialUrl || matchedDoc.officialUrl;
+  const displayTitle = matchedDoc.title || documentTitle;
+  const displayAuthority = matchedDoc.authority || 'Government of India / Statutory Authority';
+  const displayYear = matchedDoc.yearOrVersion || '2026 Statutory Registry';
+  const displayDesc = matchedDoc.description || 'Official statutory document indexed in the Ministry Google Drive Knowledge Base.';
+  const displaySections = matchedDoc.sections || matchedDoc.keySections || [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
@@ -42,10 +67,10 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
                 <span>Verified Public Record</span>
               </div>
               <h3 className="font-bold text-slate-900 text-lg leading-snug">
-                {matchedDoc.title}
+                {displayTitle}
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                {matchedDoc.authority} • {matchedDoc.yearOrVersion}
+                {displayAuthority} • {displayYear}
               </p>
             </div>
           </div>
@@ -70,26 +95,28 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
           <div>
             <h4 className="font-bold text-slate-900 text-sm mb-1.5">Official Summary & Scope</h4>
             <p className="text-slate-600 leading-relaxed">
-              {matchedDoc.description}
+              {displayDesc}
             </p>
           </div>
 
-          <div>
-            <h4 className="font-bold text-slate-900 text-sm mb-2">Key Statutory Sections Included</h4>
-            <div className="space-y-2">
-              {(matchedDoc.sections || matchedDoc.keySections || []).map((sec, idx) => (
-                <div key={idx} className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
-                  <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                    <CheckCircle className="w-3.5 h-3.5 text-slate-700 shrink-0" />
-                    <span>{sec.section}: {sec.title}</span>
+          {displaySections.length > 0 && (
+            <div>
+              <h4 className="font-bold text-slate-900 text-sm mb-2">Key Statutory Sections Included</h4>
+              <div className="space-y-2">
+                {displaySections.map((sec, idx) => (
+                  <div key={idx} className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
+                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <CheckCircle className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                      <span>{sec.section}: {sec.title}</span>
+                    </div>
+                    <p className="text-slate-600 text-xs leading-relaxed">
+                      {sec.content}
+                    </p>
                   </div>
-                  <p className="text-slate-600 text-xs leading-relaxed">
-                    {sec.content}
-                  </p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -101,7 +128,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition-colors"
+              className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
             >
               Close
             </button>

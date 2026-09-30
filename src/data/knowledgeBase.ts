@@ -2,209 +2,126 @@ import { KnowledgeDocument, SourceItem } from '../types';
 
 export const VERIFIED_KNOWLEDGE_DOCUMENTS: KnowledgeDocument[] = [
   {
-    id: 'mscs-act-2023',
-    title: 'Multi-State Co-operative Societies Act, 2002 & (Amendment) Act, 2023',
-    authority: 'Ministry of Cooperation, Government of India',
-    category: 'Cooperative Law & Governance',
-    yearOrVersion: 'Act No. 39 of 2002 (Amended 2023)',
-    officialUrl: 'https://cooperation.gov.in',
-    description: 'Statutory framework governing multi-state cooperative societies in India including board composition, democratic elections, auditing, and member rights.',
+    id: 'drive-farmer-laws-india-1',
+    title: 'farmer_related_laws_india (1).txt',
+    authority: 'Ministry of Agriculture & Farmers Welfare & Ministry of Cooperation, Govt of India',
+    category: 'Agriculture, Farmers & Cooperative Laws',
+    yearOrVersion: 'Updated Statutory Compendium 2024',
+    officialUrl: 'https://agricoop.gov.in',
+    description: 'Comprehensive statutory guide to Indian farmer laws, Model Bye-laws for Multipurpose PACS (2023), PMFBY Crop Insurance rules & 72-hour localized loss intimation, Kisan Credit Card (KCC) 4% effective interest subvention, Seeds Act, Fertilizer Control Order (FCO), and PPV&FRA farmers rights.',
     keySections: [
       {
-        section: 'Section 29',
-        title: 'Disqualification for being a member',
-        content: 'No person shall be admitted as a member of a multi-state cooperative society if he has not applied in writing, or has been convicted of an offence involving moral turpitude, or is in default of payment of any loan or money due to the society.'
+        section: 'PACS Model Bye-Laws 2023',
+        title: 'Multipurpose Cooperative Mandate & Democratic Governance',
+        content: 'PACS are empowered to operate 25+ activities including fertilizer dealership, custom hiring centres, cold storage, LPG retail outlets, and CSC centres. Every regular member has strictly One Member One Vote.'
       },
       {
-        section: 'Section 30',
-        title: 'Rights of Members',
-        content: 'Every member has the right to vote in the general meetings (one member, one vote principle), inspect books of accounts and annual audit reports, attend general meetings, receive dividends if approved, and receive copy of by-laws.'
+        section: 'PMFBY Crop Insurance & 72-Hour Rule',
+        title: 'Capped Farmer Premiums & Loss Intimation Protocol',
+        content: 'Farmer premiums are strictly capped at 2.0% for Kharif crops, 1.5% for Rabi crops, and 5.0% for commercial crops. In case of localized calamity (hailstorm, inundation), loss must be reported within 72 hours via Toll-Free 14447 or Crop Insurance App.'
       },
       {
-        section: 'Section 45',
-        title: 'Co-operative Election Authority',
-        content: 'The Central Government shall constitute a Co-operative Election Authority to conduct elections of the board of multi-state cooperative societies, ensuring free, fair, and timely democratic process.'
+        section: 'Kisan Credit Card (KCC)',
+        title: 'Interest Subvention & 4% Effective Net Interest',
+        content: 'Normal bank crop loan interest is 7% up to ₹3,00,000. Farmers who repay on time receive 3% Prompt Repayment Incentive, making net effective interest 4% per annum. Collateral-free limit is ₹1.60 lakh.'
       },
       {
-        section: 'Section 70',
-        title: 'Auditing of Multi-State Co-operative Societies',
-        content: 'Every multi-state co-operative society must have its accounts audited annually by an auditor selected from an approved panel maintained by the Central Registrar.'
-      },
-      {
-        section: 'Section 84',
-        title: 'Disputes which may be referred to Arbitration',
-        content: 'Notwithstanding anything contained in any other law, any dispute touching the constitution, management, elections, or business of a multi-state co-operative society shall be referred to arbitration.'
-      },
-      {
-        section: 'Section 85A',
-        title: 'Co-operative Ombudsman',
-        content: 'Introduced by 2023 Amendment: The Central Government appoints one or more Co-operative Ombudsman for resolving member grievances relating to non-receipt of share certificate, loan irregularities, election delays, or corruption.'
+        section: 'Seeds Act & Essential Commodities Act (ECA)',
+        title: 'Quality Standards, MRP Enforcement & Farmers Seed Rights',
+        content: 'Selling substandard seeds or charging above MRP for fertilizers is punishable under ECA 1955. Under PPV&FRA 2001, farmers retain full statutory rights to save, use, sow, resow, and exchange farm-saved seeds.'
       }
     ]
   },
   {
-    id: 'pacs-model-byelaws-2023',
-    title: 'Model Bye-Laws for Primary Agricultural Credit Societies (PACS)',
-    authority: 'Ministry of Cooperation & National Council for Cooperative Training (NCCT)',
-    category: 'PACS Services & Rural Governance',
-    yearOrVersion: '2023 Guidelines',
-    officialUrl: 'https://cooperation.gov.in/pacs-model-byelaws',
-    description: 'Transformative model bye-laws enabling PACS to expand into multipurpose entities including Common Service Centres (CSC), dairy, fishery, custom hiring centres, and fertilizer distribution.',
+    id: 'drive-indian-laws-quick-ref',
+    title: 'Indian_Laws_Quick_Reference.txt',
+    authority: 'Ministry of Law and Justice, Government of India',
+    category: 'Constitutional, Criminal, RTI & Consumer Laws',
+    yearOrVersion: 'Statutory Quick Reference Manual',
+    officialUrl: 'https://lawmin.gov.in',
+    description: 'Essential quick reference of Indian laws including Constitutional Rights (Articles 14, 19, 21, 43B Cooperative Directive Principle), Zero FIR & arrest safeguards for women (CrPC / BNSS), Right to Information (RTI) 30-day compliance timelines, and Consumer Protection Act 2019.',
     keySections: [
       {
-        section: 'Clause 4',
-        title: 'Objectives of Model PACS',
-        content: 'To promote economic interests of members by providing short-term, medium-term agricultural credit, inputs (seeds, fertilizers), warehousing, Common Service Centre (CSC) digital services, dairy and fisheries operations, and LPG/Petrol retail outlets.'
+        section: 'Constitution Articles 19(1)(c) & 43B',
+        title: 'Right to Form Cooperatives & Directive Principles',
+        content: 'Article 19(1)(c) guarantees fundamental right to form cooperative societies. Article 43B mandates the State to promote voluntary formation, autonomous functioning, and democratic management of cooperatives.'
       },
       {
-        section: 'Clause 8',
-        title: 'Membership & Eligibility',
-        content: 'Any individual residing within the area of operation of the PACS who is a farmer, agricultural labourer, artisan, or small entrepreneur is eligible for regular voting membership upon purchasing at least one share and paying the admission fee.'
+        section: 'Zero FIR & Arrest Safeguards',
+        title: 'Jurisdiction-Free FIR & Women Protection Guidelines',
+        content: 'Zero FIR can be registered at any police station without jurisdictional hindrance and transferred later. Women cannot be arrested between sunset and sunrise without prior written permission from a Judicial Magistrate.'
       },
       {
-        section: 'Clause 14',
-        title: 'Borrowing Power and Credit Assessment',
-        content: 'Loans for crop cultivation are disbursed based on scale of finance fixed by District Level Technical Committee (DLTC), linked directly with Kisan Credit Card (KCC) limits.'
+        section: 'Right to Information (RTI) Act 2005',
+        title: '30-Day Mandatory Disclosure & Penalty on Delay',
+        content: 'Public Information Officers (PIO) must supply information within 30 days (48 hours if concerning life and liberty). First appeal lies within 30 days to First Appellate Authority.'
       },
       {
-        section: 'Clause 22',
-        title: 'Digital PACS & Computerization Standards',
-        content: 'PACS must maintain accounts on standard ERP software linked with NABARD and District Central Cooperative Banks (DCCB) to ensure transparency and instant subsidy credit.'
+        section: 'Consumer Protection & Cooperative Ombudsman',
+        title: 'Grievance Redressal Forums & CRCS Ombudsman',
+        content: '3-tier consumer courts for consumer dispute claims. Section 85A of MSCS Act establishes Cooperative Ombudsman for prompt resolution of member deposit disputes and irregularities.'
       }
     ]
   },
   {
-    id: 'pmfby-guidelines',
-    title: 'Pradhan Mantri Fasal Bima Yojana (PMFBY) Operational Guidelines',
-    authority: 'Ministry of Agriculture & Farmers Welfare, Government of India',
-    category: 'Agriculture & Crop Insurance',
-    yearOrVersion: 'Revised Operational Guidelines',
-    officialUrl: 'https://pmfby.gov.in',
-    description: 'Comprehensive risk coverage for crops against non-preventable natural risks from pre-sowing to post-harvest stages.',
+    id: 'drive-vehicle-traffic-laws-1',
+    title: 'Indian_Vehicle_and_Traffic_Laws (1).txt',
+    authority: 'Ministry of Road Transport and Highways (MoRTH), Govt of India',
+    category: 'Motor Vehicles, Traffic Fines & Road Safety',
+    yearOrVersion: 'Motor Vehicles (Amendment) Act & Rules',
+    officialUrl: 'https://morth.nic.in',
+    description: 'Comprehensive compendium of Motor Vehicles Act rules, traffic fines (Helmet Section 194D ₹1000 + 3-month DL suspension, Seatbelt Section 194B ₹1000, Drunk Driving Section 185 ₹10000/jail), DigiLocker/mParivahan electronic document validity, Section 134A Good Samaritan legal protection, and agricultural tractor transport norms.',
     keySections: [
       {
-        section: 'Chapter 2, Section 2.1',
-        title: 'Coverage of Farmers',
-        content: 'All farmers growing notified crops in notified areas including sharecroppers and tenant farmers are eligible for coverage. Scheme is voluntary for all farmers.'
+        section: 'Section 185, 194B & 194D',
+        title: 'Traffic Offences, Compounding Fines & Licence Disqualification',
+        content: 'Helmet violation carries ₹1,000 fine and 3-month licence suspension. Seatbelt violation is ₹1,000. Drunk driving (>30mg/100ml blood) carries up to ₹10,000 fine and/or 6 months jail for first offence, ₹15,000/2 years for second.'
       },
       {
-        section: 'Chapter 3, Section 3.2',
-        title: 'Premium Rates Payable by Farmers',
-        content: 'Maximum premium payable by farmer is strictly capped at 2.0% for Kharif food and oilseed crops, 1.5% for Rabi food and oilseed crops, and 5.0% for annual commercial/horticultural crops. Balance actuarial premium is subsidized 50:50 by Central and State Governments.'
+        section: 'DigiLocker & mParivahan Acceptance',
+        title: 'Legally Binding Electronic DL, RC & Insurance',
+        content: 'Under Rule 139 of Central Motor Vehicles Rules and MoRTH notifications, digital documents presented in DigiLocker/mParivahan are on par with original physical certificates and must be accepted by traffic police.'
       },
       {
-        section: 'Chapter 4, Section 4.2',
-        title: 'Loss Intimation in Case of Localized Calamities',
-        content: 'In case of localized calamities (hailstorm, landslide, inundation, cloudburst) or post-harvest losses (cyclone, unseasonal rains), the insured farmer MUST intimate loss within 72 hours through the Crop Insurance App, Toll-free Number 14447, or nearest bank/PACS branch.'
+        section: 'Section 134A Good Samaritan Protection',
+        title: 'Civil & Criminal Immunity for Accident Rescuers',
+        content: 'Good Samaritans helping road accident victims cannot be held liable, harassed by police, forced to disclose identity, or required to pay hospital admission charges.'
       },
       {
-        section: 'Chapter 5, Section 5.4',
-        title: 'Claim Assessment & Direct Bank Transfer',
-        content: 'Claims are assessed based on Crop Cutting Experiments (CCE) and localized joint surveys, and transferred directly to the farmer bank account via Aadhaar Enabled Payment System (AEPS).'
+        section: 'Agricultural Tractor & Trailer Norms',
+        title: 'Exemptions for Farm Use & Third-Party Insurance Mandate',
+        content: 'Tractors and farm trailers used exclusively for agricultural operations are exempt from commercial road permit taxes. Compulsory third-party insurance is legally mandatory for all motorized vehicles.'
       }
     ]
   },
   {
-    id: 'kcc-guidelines',
-    title: 'Kisan Credit Card (KCC) Scheme & Revised Interest Subvention',
-    authority: 'Reserve Bank of India (RBI) & NABARD',
-    category: 'Finance & Financial Literacy',
-    yearOrVersion: 'Master Circular on KCC',
-    officialUrl: 'https://www.nabard.org',
-    description: 'Adequate and timely credit support from the banking system under a single window with flexible and simplified procedures for cultivation and allied activities.',
+    id: 'drive-land-laws-verified-sources',
+    title: 'land_laws_verified_sources.txt',
+    authority: 'Department of Land Resources & Ministry of Panchayati Raj',
+    category: 'Land Revenue, SVAMITVA, RERA & Land Acquisition',
+    yearOrVersion: 'Land Governance & Statutory Property Acts',
+    officialUrl: 'https://dolr.gov.in',
+    description: 'Complete statutory guide on Land Revenue Codes, Mutation (Dakhil Kharij / 7/12 / Jamabandi / RoR), SVAMITVA Scheme drone survey and rural Property Cards (Gharoni), Right to Fair Compensation in Land Acquisition Act (RFCTLARR 2013 - 4x rural market value compensation), RERA protections, and daughter equal coparcenary inheritance rights under Hindu Succession Act 2005.',
     keySections: [
       {
-        section: 'Section 3',
-        title: 'Quantum of Credit & Scale of Finance',
-        content: 'Credit limit for 1st year = Crop scale of finance x Extent of area cultivated + 10% for post-harvest/household + 20% for maintenance of farm assets. Valid for 5 years with 10% increase every year.'
+        section: 'Land Mutation (Dakhil Kharij / 7/12)',
+        title: 'Revenue Record of Rights & Time-Bound Mutation',
+        content: 'Land mutation records change in ownership in revenue records (7/12, Jamabandi, Khasra-Khatauni). Uncontested mutations must be processed within 30 to 45 days after deed registration.'
       },
       {
-        section: 'Section 6',
-        title: 'Interest Subvention Scheme (ISS)',
-        content: 'Short-term crop loans up to Rs 3,00,000 are provided at an effective interest rate of 4% per annum (7% normal rate minus 3% Prompt Repayment Incentive) to farmers who repay on or before due date.'
+        section: 'SVAMITVA Scheme & Property Cards',
+        title: 'Drone Survey of Rural Abadi Land & Legal Ownership Titles',
+        content: 'SVAMITVA provides official Property Cards (Sampatti Card / Gharoni) for rural inhabited lands, providing clear legal titles usable as collateral for bank credit and building loans.'
       },
       {
-        section: 'Section 7',
-        title: 'Collateral-free Loan Threshold',
-        content: 'No collateral security or hypothecation is required for KCC crop loans up to Rs 1,60,000 (extended up to Rs 2,00,000 under specific tie-up agreements with PACS/sugar mills).'
-      }
-    ]
-  },
-  {
-    id: 'pm-kisan-guidelines',
-    title: 'Pradhan Mantri Kisan Samman Nidhi (PM-KISAN) Guidelines',
-    authority: 'Ministry of Agriculture and Farmers Welfare',
-    category: 'Government Schemes',
-    yearOrVersion: 'Operational Modalities',
-    officialUrl: 'https://pmkisan.gov.in',
-    description: 'Income support scheme providing financial benefit of Rs 6,000 per annum to all landholding farmer families across the country.',
-    keySections: [
-      {
-        section: 'Clause 2',
-        title: 'Benefit Quantum and Distribution',
-        content: 'Rs 6,000 per year transferred directly into bank accounts in three equal 4-monthly installments of Rs 2,000 each via DBT.'
+        section: 'RFCTLARR Act 2013 (Land Acquisition)',
+        title: '4x Rural Market Value Compensation & Mandatory SIA',
+        content: 'Guarantees up to 4 times market value compensation in rural areas (2x in urban), mandatory Social Impact Assessment (SIA), and rehabilitation & resettlement (R&R) packages.'
       },
       {
-        section: 'Clause 3',
-        title: 'Mandatory e-KYC and Land Seeding',
-        content: 'To receive PM-KISAN benefits, farmer must have verified e-KYC (via OTP, Biometrics, or Face Authentication app), land ownership document seeded with state land registry, and Aadhaar-seeded active bank account (NPCI DBT enabled).'
-      },
-      {
-        section: 'Clause 5',
-        title: 'Exclusion Categories',
-        content: 'Institutional landholders, current/former constitutional post holders, serving/retired government employees (except Group D/Multi Tasking Staff), income tax payees in last assessment year, and professionals (doctors, engineers, lawyers, CA) are not eligible.'
-      }
-    ]
-  },
-  {
-    id: 'grievance-crcs-cpgrams',
-    title: 'Cooperative Grievance Redressal Mechanism & CPGRAMS Guidelines',
-    authority: 'Central Registrar of Cooperative Societies (CRCS) & DARPG',
-    category: 'Grievance Redressal',
-    yearOrVersion: 'Citizen Charter & Portal Manual',
-    officialUrl: 'https://crcs.gov.in',
-    description: 'Procedural guidance for filing and tracking complaints against cooperative societies, refund delays, electoral malpractices, and staff misconduct.',
-    keySections: [
-      {
-        section: 'Procedure 1',
-        title: 'Primary Resolution with Managing Committee / Secretary',
-        content: 'Member must first submit written representation to the PACS Secretary or Cooperative Society Board, obtaining signed acknowledgement receipt. The society has 30 days to resolve the grievance.'
-      },
-      {
-        section: 'Procedure 2',
-        title: 'Escalation to District Deputy Registrar (DDR) / RCS',
-        content: 'If unresolved within 30 days, file statutory appeal under State Cooperative Societies Act to the Assistant/Deputy Registrar of Cooperative Societies of the respective district.'
-      },
-      {
-        section: 'Procedure 3',
-        title: 'Multi-State Societies Portal (CRCS) & Cooperative Ombudsman',
-        content: 'For Multi-State societies, file complaint directly online at crcs.gov.in or pgportal.gov.in under Ministry of Cooperation. Time-bound investigation is mandated within 60 days.'
-      }
-    ]
-  },
-  {
-    id: 'property-land-records',
-    title: 'Land Records, 7/12 Extract, and Cooperative Mortgage Procedures',
-    authority: 'Department of Land Resources & State Revenue Departments',
-    category: 'Property & Documents',
-    yearOrVersion: 'Digital India Land Records Modernization Programme (DILRMP)',
-    officialUrl: 'https://dilrmp.gov.in',
-    description: 'Documentation requirements for agricultural land verification, crop loan hypothecation, non-encumbrance certificates, and inheritance mutation.',
-    keySections: [
-      {
-        section: 'Rule 1',
-        title: 'Record of Rights (RoR / 7/12 / Khasra-Khatauni)',
-        content: 'Essential document proving land ownership, survey number, area, crop details, and existing encumbrances or bank charges (Bhoomi/Anyror/Mahabhulekh/BanglarBhumi).'
-      },
-      {
-        section: 'Rule 2',
-        title: 'Creation of Charge (Gehan / Mortgage / Bojh)',
-        content: 'Under Cooperative Acts, when a member obtains an agricultural loan from PACS, a statutory charge is created on the land without physical transfer of title deed, registered electronically with the sub-registrar.'
-      },
-      {
-        section: 'Rule 3',
-        title: 'No Objection Certificate (NOC) and Discharge of Charge',
-        content: 'Upon full repayment of the cooperative loan, the PACS issues a Loan Clearance Certificate, and the Secretary submits an e-mutation application to remove the bank charge from the land record within 15 days.'
+        section: 'Hindu Succession Act 2005 & Land Purchase',
+        title: 'Daughters Equal Coparcenary Rights & Agricultural Land Buying Rules',
+        content: 'Daughters have equal birthright in ancestral agricultural property. In states like Maharashtra, Gujarat and Karnataka, agricultural land can only be purchased by certified agriculturists.'
       }
     ]
   }

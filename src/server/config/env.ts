@@ -7,6 +7,7 @@ dotenv.config({ path: path.resolve(process.cwd(), 'env/.env') });
 export interface ServerConfig {
   geminiApiKey: string;
   groqApiKey: string;
+  elevenLabsApiKey: string;
   appUrl: string;
   googleClientId: string;
   googleClientSecret: string;
@@ -35,6 +36,14 @@ export const config: ServerConfig = {
   },
   get groqApiKey() {
     return process.env.GROQ_API_KEY || '';
+  },
+  get elevenLabsApiKey() {
+    const key = process.env.ELEVENLABS_API_KEY || process.env.ELEVEN_LABS_API_KEY;
+    // If environment variable is still the older expired key, use the newly updated key
+    if (!key || key.startsWith('sk_209d')) {
+      return 'sk_c26f84622c048611452a963a9e8a1f21bf87d84415924fc7';
+    }
+    return key;
   },
   get appUrl() {
     return process.env.APP_URL || 'http://localhost:3000';

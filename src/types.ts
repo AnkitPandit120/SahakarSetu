@@ -65,6 +65,7 @@ export interface StructuredAnswer {
   followUpQuestions?: string[];
   confidenceNote?: string;
   legalDisclaimer: string;
+  isInternetFallback?: boolean;
   language: Language;
 }
 
@@ -126,6 +127,7 @@ export interface SchemeItem {
 export interface KnowledgeDocument {
   id: string;
   title: string;
+  fileName?: string;
   authority: string;
   category: string;
   yearOrVersion: string;
@@ -146,6 +148,7 @@ export interface KnowledgeDocument {
 export interface UserProfile {
   id: string;
   name: string;
+  username?: string;
   email: string;
   role: string;
   state?: string;
