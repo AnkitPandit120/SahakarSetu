@@ -13,6 +13,7 @@ import { vectorStore } from './src/server/services/vectorService';
 import { config } from './src/server/config/env';
 
 dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), 'env/.env') });
 
 async function startServer() {
   const app = express();
@@ -33,6 +34,8 @@ async function startServer() {
       status: 'ok',
       architecture: 'Full-Stack React + Vite + Express + Gemini RAG',
       geminiConfigured: !!config.geminiApiKey,
+      groqConfigured: !!config.groqApiKey,
+      activeAiProvider: config.geminiApiKey ? 'Gemini 2.5 Flash' : (config.groqApiKey ? 'Groq LLaMA 3.3' : 'Deterministic Offline'),
       driveFolderConfigured: !!config.driveKnowledgeFolderId,
       driveConnected: !!(config.adminAccessToken || config.googleRefreshToken),
       stats: vectorStore.getStats(),

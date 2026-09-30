@@ -1,8 +1,12 @@
 import dotenv from 'dotenv';
+import path from 'path';
+
 dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), 'env/.env') });
 
 export interface ServerConfig {
   geminiApiKey: string;
+  groqApiKey: string;
   appUrl: string;
   googleClientId: string;
   googleClientSecret: string;
@@ -28,6 +32,9 @@ export function cleanFolderId(input: string | null | undefined): string {
 export const config: ServerConfig = {
   get geminiApiKey() {
     return process.env.GEMINI_API_KEY || '';
+  },
+  get groqApiKey() {
+    return process.env.GROQ_API_KEY || '';
   },
   get appUrl() {
     return process.env.APP_URL || 'http://localhost:3000';

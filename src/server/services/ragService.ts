@@ -7,6 +7,7 @@ import { generateEmbedding, generateEmbeddingsBatch } from './embeddingService';
 import { vectorStore, StoredDocument, SearchResultChunk } from './vectorService';
 import { performTrustedWebSearch } from './webSearchService';
 import { generateGroundedRAGAnswer, getNoReliableSourceResponse, ChatAnswerResponse } from './geminiService';
+import { generateGroqGeneralAnswer } from './groqService';
 
 export interface SyncReport {
   timestamp: string;
@@ -251,6 +252,18 @@ export async function handleUserChatQuery(payload: ChatQueryPayload): Promise<Ch
     };
   }
 
-  // 5. If neither RAG nor trusted web search has reliable info -> Return honest no-hallucination fallback
+  // 5. Try Groq statutory assistant if configured before no-source fallback
+  if (config.groqApiKey) {
+    try {
+      const groqGeneral = await generateGroqGeneralAnswer(message, language);
+      if (groqGeneral) {
+        return groqGeneral;
+      }
+    } catch (groqErr: any) {
+      console.warn('Groq general query fallback error:', groqErr?.message);
+    }
+  }
+
+  // 6. If neither AI nor trusted web search has reliable info -> Return honest no-hallucination fallback
   return getNoReliableSourceResponse(language);
 }

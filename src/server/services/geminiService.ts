@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { config } from '../config/env';
 import { SearchResultChunk } from './vectorService';
+import { generateGroqRAGAnswer } from './groqService';
 
 export interface ChatAnswerResponse {
   answer: string;
@@ -129,11 +130,23 @@ ${contextString}`;
         };
       }
     } catch (err: any) {
-      console.warn('Gemini RAG synthesis error, using deterministic synthesizer:', err?.message);
+      console.warn('Gemini RAG synthesis error, attempting Groq fallback:', err?.message);
     }
   }
 
-  // High-reliability deterministic fallback synthesis
+  // 2. High-reliability Groq LLM Failover
+  if (config.groqApiKey) {
+    try {
+      const groqAnswer = await generateGroqRAGAnswer(question, language, chunks);
+      if (groqAnswer) {
+        return groqAnswer;
+      }
+    } catch (groqErr: any) {
+      console.warn('Groq RAG synthesis error, falling back to deterministic synthesizer:', groqErr?.message);
+    }
+  }
+
+  // 3. Final fallback: High-reliability deterministic synthesis
   return generateDeterministicSynthesis(question, language, chunks);
 }
 
