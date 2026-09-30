@@ -1,0 +1,52 @@
+<div class="container" style="padding-top: 10px;">
+  <!-- Section Header -->
+  <div style="margin-bottom: 24px;">
+    <div style="font-size: 11px; font-weight: 700; color: #D97706; text-transform: uppercase; letter-spacing: 0.05em;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'विधिक एवं संस्थागत ढांचा' : 'Statutory & Institutional Framework' %>
+    </div>
+    <h2 style="font-size: 24px; font-weight: 800; color: #0B3B60;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'सहकारसेतु विधिक तंत्र के बारे में' : 'About SahakarSetu Portal' %>
+    </h2>
+    <p style="font-size: 13px; color: #64748B;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'सहकार से समृद्धि (Sahakar Se Samriddhi) राष्ट्रीय संकल्प के अंतर्गत विकसित हल्का एवं तीव्र विधिक परामर्श तंत्र।' : 'Designed for high-speed delivery on budget devices, Pi kiosks, and rural terminals.' %>
+    </p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+    <!-- Architecture Card -->
+    <div class="card">
+      <h3 class="card-title">⚡ Ultra-Lightweight Server-Rendered HTML + HTMX Architecture</h3>
+      <p class="card-desc" style="line-height: 1.7; color: #334155;">
+        This portal runs on an ultra-optimized stack designed specifically for <strong>low-end computers, budget Android smartphones, and rural Raspberry Pi kiosk terminals</strong>:
+      </p>
+      <ul style="margin-left: 20px; font-size: 13px; color: #475569; display: flex; flex-direction: column; gap: 8px;">
+        <li><strong>Server-Rendered EJS HTML:</strong> The server delivers pure, ready-to-paint HTML. The client device executes almost zero JavaScript overhead.</li>
+        <li><strong>HTMX Interactivity:</strong> Live chat, dynamic filtering, and synchronization updates use a tiny ~14KB library with zero build overhead.</li>
+        <li><strong>Server-Side Markdown (markdown-it):</strong> Formatted answers, tables, and citations are rendered directly in the cloud container.</li>
+        <li><strong>Handcrafted Pure CSS:</strong> Zero bloated framework stylesheets—pure responsive layout loaded in under 5ms.</li>
+        <li><strong>PWA Shell Caching:</strong> Service worker caches core layouts locally for seamless resilience in low-connectivity areas.</li>
+      </ul>
+    </div>
+
+    <!-- Statutory Framework Card -->
+    <div class="card">
+      <h3 class="card-title">🏛️ Grounded Statutory & Regulatory Framework</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 12px;">
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 14px; border-radius: 8px;">
+          <div style="font-weight: 700; color: #0B3B60; font-size: 14px; margin-bottom: 4px;">1. Model PACS Bye-Laws 2024</div>
+          <p style="font-size: 12px; color: #64748B;">Comprehensive multi-purpose guidelines expanding PACS operations into Common Service Centres, dairy, storage, and fertilizer distribution.</p>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 14px; border-radius: 8px;">
+          <div style="font-weight: 700; color: #0B3B60; font-size: 14px; margin-bottom: 4px;">2. MSCS Amendment Act 2023</div>
+          <p style="font-size: 12px; color: #64748B;">Establishes the Co-operative Election Authority, Co-operative Ombudsman, and strict governance transparency norms.</p>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 14px; border-radius: 8px;">
+          <div style="font-weight: 700; color: #0B3B60; font-size: 14px; margin-bottom: 4px;">3. NABARD Credit & Refinance Circulars</div>
+          <p style="font-size: 12px; color: #64748B;">Kisan Credit Card (KCC) 7% interest subvention with 3% prompt repayment incentive (effective 4% per annum).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

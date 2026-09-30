@@ -1,0 +1,67 @@
+<div class="grid-cards">
+  <% if (!schemes || schemes.length === 0) { %>
+    <div style="grid-column: 1 / -1; padding: 30px; text-align: center; color: #64748B;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'कोई योजना नहीं मिली।' : 'No matching schemes found.' %>
+    </div>
+  <% } else { %>
+    <% schemes.forEach(function(s) { %>
+      <div class="card">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
+            <span style="font-size: 10px; background: #EFF6FF; color: #1E40AF; padding: 2px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase;">
+              <%= s.category %>
+            </span>
+            <span style="font-size: 11px; font-weight: 700; color: #059669;">
+              <%= s.officialSource || 'Central Portal' %>
+            </span>
+          </div>
+
+          <h3 class="card-title">
+            <%= (typeof language !== 'undefined' && language === 'hi' && s.name && s.name.hi) ? s.name.hi : (s.name ? s.name.en : s.id) %>
+          </h3>
+
+          <div style="font-size: 11px; color: #0B3B60; font-weight: 600; margin-bottom: 8px;">
+            🏛️ <%= (typeof language !== 'undefined' && language === 'hi' && s.ministry && s.ministry.hi) ? s.ministry.hi : (s.ministry ? s.ministry.en : 'Government of India') %>
+          </div>
+
+          <p class="card-desc">
+            <%= (typeof language !== 'undefined' && language === 'hi' && s.shortDescription && s.shortDescription.hi) ? s.shortDescription.hi : (s.shortDescription ? s.shortDescription.en : '') %>
+          </p>
+
+          <!-- Key Benefit Highlight -->
+          <% if (s.benefits && (s.benefits.hi || s.benefits.en)) { 
+             const benefitList = (typeof language !== 'undefined' && language === 'hi' && s.benefits.hi) ? s.benefits.hi : s.benefits.en;
+             if (benefitList && benefitList.length > 0) { %>
+              <div style="background: #F0FDF4; padding: 8px 12px; border-radius: 6px; border: 1px solid #BBF7D0; font-size: 11.5px; margin-bottom: 12px;">
+                <div style="font-weight: 700; color: #166534; margin-bottom: 2px;">
+                  ✨ <%= (typeof language !== 'undefined' && language === 'hi') ? 'मुख्य लाभ / सहायता:' : 'Key Benefit / Subvention:' %>
+                </div>
+                <div style="color: #15803D;">
+                  <%= benefitList[0] %>
+                </div>
+              </div>
+          <% } } %>
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center; border-top: 1px solid #F1F5F9; padding-top: 12px; margin-top: 6px;">
+          <a
+            href="/?inquire=<%= encodeURIComponent((typeof language !== 'undefined' && language === 'hi' && s.name && s.name.hi) ? s.name.hi + ' के नियम व आवेदन प्रक्रिया' : (s.name ? s.name.en : s.id) + ' guidelines and application process') %>"
+            style="flex: 1; padding: 8px; text-align: center; background: #0B3B60; color: #FFFFFF; font-size: 12px; font-weight: 700; border-radius: 6px; text-decoration: none;"
+          >
+            💬 <%= (typeof language !== 'undefined' && language === 'hi') ? 'विधिक प्रश्न पूछें' : 'Ask AI Advisor' %>
+          </a>
+          <% if (s.officialUrl) { %>
+            <a
+              href="<%= s.officialUrl %>"
+              target="_blank"
+              rel="noopener noreferrer"
+              style="padding: 8px 12px; background: #F1F5F9; color: #0B3B60; font-size: 12px; font-weight: 700; border-radius: 6px; text-decoration: none; border: 1px solid #CBD5E1;"
+            >
+              Portal ↗
+            </a>
+          <% } %>
+        </div>
+      </div>
+    <% }); %>
+  <% } %>
+</div>

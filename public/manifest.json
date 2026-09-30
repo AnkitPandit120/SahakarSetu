@@ -1,0 +1,21 @@
+{
+  "name": "SahakarSetu - National PACS & Cooperative Legal Portal",
+  "short_name": "SahakarSetu",
+  "description": "Server-rendered AI statutory legal advisor and PACS knowledge base for rural cooperatives",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B3B60",
+  "theme_color": "#0B3B60",
+  "icons": [
+    {
+      "src": "/images/modi_portrait.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/images/modi_portrait.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

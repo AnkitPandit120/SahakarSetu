@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Search,
   MessageSquare,
   Compass,
   ArrowRight,
-  ShieldCheck,
   CheckCircle2,
   FileText,
   Building,
@@ -33,8 +31,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onOpenDirectChat
 }) => {
   const t = TRANSLATIONS[language];
-  const [searchInput, setSearchInput] = useState('');
-  const [selectedDept, setSelectedDept] = useState<'all' | 'mscs' | 'pacs' | 'credit' | 'dispute'>('all');
 
   // Official Government Gazette & Policy Flash Ticker items
   const tickerNotices = [
@@ -44,47 +40,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     '⚖️ Statutory Notice: Multi-State Co-operative Societies (Amendment) Act 2023 Rules notified for transparent governance.',
     '💳 KCC Saturation: Interest subvention of 3% for prompt repayment on crop loans through rural cooperative credit.'
   ];
-
-  // Popular suggested queries
-  const popularQuestions: Record<Language, { label: string; query: string }[]> = {
-    en: [
-      { label: 'PACS Membership Procedure', query: 'What is the step-by-step procedure to apply for voting membership in a Primary Agricultural Credit Society (PACS)?' },
-      { label: 'PMFBY 72-Hour Claim Rule', query: 'What is the 72-hour localized calamity intimation rule and crop loss survey process under PMFBY?' },
-      { label: 'Cooperative Member Rights', query: 'What are the statutory democratic rights, inspection rights, and voting powers of a cooperative society member?' },
-      { label: 'KCC Loan Subvention', query: 'What are the interest subvention rules and collateral-free loan limits for Kisan Credit Card through cooperatives?' },
-      { label: 'CRCS Grievance Redressal', query: 'How can a citizen lodge a formal complaint against a Multi-State Cooperative Society on the CRCS grievance portal?' }
-    ],
-    hi: [
-      { label: 'पैक्स (PACS) सदस्यता नियम', query: 'प्राथमिक कृषि साख समिति (PACS) में नियमित मतदान सदस्य बनने की क्या प्रक्रिया और पात्रता है?' },
-      { label: 'पीएम फसल बीमा 72 घंटे का नियम', query: 'प्रधानमंत्री फसल बीमा योजना (PMFBY) के तहत 72 घंटे में स्थानीय आपदा सूचना और क्लेम की क्या प्रक्रिया है?' },
-      { label: 'सहकारी सदस्य के अधिकार', query: 'सहकारी समिति अधिनियम के तहत सदस्यों के क्या वैधानिक अधिकार और मतदान शक्तियां हैं?' },
-      { label: 'केसीसी (KCC) ब्याज छूट योजना', query: 'सहकारी बैंकों के माध्यम से किसान क्रेडिट कार्ड (KCC) पर 3% त्वरित पुनर्भुगतान ब्याज छूट के क्या नियम हैं?' },
-      { label: 'सीआरसीएस पर शिकायत निवारण', query: 'मल्टी-स्टेट कोऑपरेटिव सोसाइटी के विरुद्ध सीआरसीएस पोर्टल पर ऑनलाइन शिकायत कैसे दर्ज करें?' }
-    ],
-    mr: [
-      { label: 'पॅक्स (PACS) सभासदत्व प्रक्रिया', query: 'गावातील प्राथमिक कृषी पतसंस्थेचे (PACS) मतदानाचे सभासद कसे व्हावे?' },
-      { label: 'पीक विमा ७२ तास नियम', query: 'प्रधानमंत्री पीक विमा योजना (PMFBY) मध्ये ७२ तासांच्या आत नुकसान तक्रारीचे नियम काय आहेत?' },
-      { label: 'सभासदांचे कायदेशीर हक्क', query: 'सहकारी संस्थेच्या सभासदांचे कायदेशीर हक्क आणि मतदानाचे अधिकार काय आहेत?' },
-      { label: 'केसीसी व्याज सवलत योजना', query: 'सहकारी बँकेतून किसान क्रेडिट कार्ड (KCC) वरील व्याज सवलत नियम काय आहेत?' },
-      { label: 'सीआरसीएस तक्रार निवारण', query: 'सहकारी संस्थेविरुद्ध सीआरसीएस पोर्टलवर ऑनलाइन तक्रार कशी करावी?' }
-    ],
-    bn: [
-      { label: 'প্যাকস সদস্যপদ প্রক্রিয়া', query: 'প্রাথমিক কৃষি সমবায় সমিতিতে (PACS) পূর্ণাঙ্গ ভোটাধিকার সদস্য হওয়ার নিয়ম কী?' },
-      { label: 'ফসল বীমা ৭২ ঘণ্টার নিয়ম', query: 'প্রধানমন্ত্রী ফসল বীমা যোজনা (PMFBY) তে ৭২ ঘণ্টার মধ্যে ক্ষয়ক্ষতির অভিযোগ জানানোর নিয়ম কী?' },
-      { label: 'সমবায় সদস্যদের আইনি অধিকার', query: 'সমবায় সমিতির সদস্যদের ভোটাধিকার এবং অন্যান্য সংবিধিবদ্ধ অধিকার কী কী?' },
-      { label: 'কেসিসি ঋণ অনুদান প্রকল্প', query: 'সমবায় ব্যাংক থেকে কিষাণ ক্রেডিট কার্ডের (KCC) ঋণের নিয়মাবলী কী?' },
-      { label: 'অভিযোগ দায়ের পদ্ধতি', query: 'সমবায় সমিতির বিরুদ্ধে সরকারি পোর্টালে অভিযোগ জানানোর নিয়ম কী?' }
-    ]
-  };
-
-  const currentPopularQuestions = popularQuestions[language] || popularQuestions.en;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchInput.trim()) {
-      onAskQuestion(searchInput.trim());
-    }
-  };
 
   return (
     <section id="hero-section" className="bg-[#f8fafc] border-b border-slate-300">
@@ -108,126 +63,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
       </div>
 
-      {/* 2. Official Government Hero Banner */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
-        <div className="bg-gradient-to-r from-[#0B3B60] via-[#104b78] to-[#0d3454] rounded-2xl text-white p-6 sm:p-10 shadow-lg border-2 border-[#1c5d94] relative overflow-hidden">
-          {/* Subtle National Ashoka Chakra background pattern */}
-          <div className="absolute right-0 top-0 bottom-0 opacity-5 pointer-events-none flex items-center pr-6">
-            <svg viewBox="0 0 100 100" className="w-96 h-96 stroke-current fill-none">
-              <circle cx="50" cy="50" r="45" strokeWidth="2" />
-              <circle cx="50" cy="50" r="10" strokeWidth="2" />
-              {[...Array(24)].map((_, i) => (
-                <line
-                  key={i}
-                  x1="50"
-                  y1="50"
-                  x2={50 + 45 * Math.cos((i * 15 * Math.PI) / 180)}
-                  y2={50 + 45 * Math.sin((i * 15 * Math.PI) / 180)}
-                  strokeWidth="1.5"
-                />
-              ))}
-            </svg>
-          </div>
-
-          <div className="max-w-3xl relative z-10 space-y-4">
-            {/* Official Badge */}
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-xs border border-white/20 px-3 py-1 rounded-full text-xs font-semibold text-amber-200">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
-              <span>{language === 'hi' ? 'सहकारिता मंत्रालय, भारत सरकार का आधिकारिक विधिक सहायता तंत्र' : 'Official Statutory Legal & Governance Assistance System'}</span>
-            </div>
-
-            {/* Main Portal Headline */}
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-              {language === 'hi'
-                ? 'सहकारी कानून, पैक्स नियम व सरकारी योजनाओं का प्रामाणिक मार्गदर्शन'
-                : 'Statutory Cooperative Law, Model PACS Bye-Laws & Government Schemes Portal'}
-            </h1>
-
-            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed max-w-2xl">
-              {language === 'hi'
-                ? 'मल्टी-स्टेट सहकारी समिति अधिनियम, मॉडल पैक्स उप-नियम 2024, नाबार्ड दिशानिर्देश, फसल बीमा (PMFBY) व किसान क्रेडिट कार्ड से संबंधित आधिकारिक वैधानिक धाराओं सहित जानकारी प्राप्त करें।'
-                : 'Directly grounded in Multi-State Co-operative Societies Act, Model PACS Bye-Laws 2024, NABARD circulars, PMFBY guidelines, and verified Central Government schemes.'}
-            </p>
-
-            {/* Department Filter Pills */}
-            <div className="pt-2 flex flex-wrap items-center gap-2 text-xs">
-              <span className="font-semibold text-amber-200">{language === 'hi' ? 'विभागीय क्षेत्र:' : 'Departmental Focus:'}</span>
-              {[
-                { id: 'all', label: language === 'hi' ? 'सभी क्षेत्र' : 'All Departments' },
-                { id: 'pacs', label: language === 'hi' ? 'पैक्स व ग्राम सहकारी' : 'PACS Modernization' },
-                { id: 'mscs', label: language === 'hi' ? 'मल्टी-स्टेट समितियां (MSCS)' : 'Multi-State Societies' },
-                { id: 'credit', label: language === 'hi' ? 'कृषि ऋण व केसीसी' : 'Credit & KCC Subvention' },
-                { id: 'dispute', label: language === 'hi' ? 'विवाद व शिकायत निवारण' : 'Grievance Redressal' }
-              ].map((dept) => (
-                <button
-                  key={dept.id}
-                  type="button"
-                  onClick={() => setSelectedDept(dept.id as any)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
-                    selectedDept === dept.id
-                      ? 'bg-amber-400 text-slate-950 shadow-sm'
-                      : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
-                  }`}
-                >
-                  {dept.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Main Central Government Search Bar */}
-            <form onSubmit={handleSubmit} className="pt-2">
-              <div className="relative group w-full">
-                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-500">
-                  <Search className="w-5 h-5 text-[#0B3B60]" />
-                </div>
-
-                <input
-                  id="hero-question-input"
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder={
-                    language === 'hi'
-                      ? 'कानूनी धारा, पैक्स नियम या योजना का नाम खोजें (उदा. पैक्स सदस्यता नियम, पीएमएफबीवाई 72 घंटे)...'
-                      : 'Search statutory rules, PACS bye-laws, or scheme details (e.g. PACS membership, PMFBY claim)...'
-                  }
-                  className="w-full pl-12 pr-32 sm:pr-36 py-4 bg-white text-slate-900 rounded-xl shadow-md border border-slate-300 focus:outline-none focus:ring-3 focus:ring-amber-400 text-xs sm:text-sm font-medium placeholder:text-slate-400"
-                />
-
-                <div className="absolute inset-y-2 right-2 flex items-center">
-                  <button
-                    type="submit"
-                    id="hero-submit-btn"
-                    disabled={!searchInput.trim()}
-                    className="bg-[#0B3B60] hover:bg-[#07253d] disabled:bg-slate-300 text-white px-4 sm:px-6 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all shadow-xs cursor-pointer"
-                  >
-                    {language === 'hi' ? 'खोजें (Search)' : 'Search'}
-                  </button>
-                </div>
-              </div>
-            </form>
-
-            {/* Popular Query Chips */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
-              <span className="text-[11px] font-bold text-amber-200 uppercase tracking-wider">
-                {language === 'hi' ? 'त्वरित प्रश्न:' : 'Common Inquiries:'}
-              </span>
-              {currentPopularQuestions.map((qItem, idx) => (
-                <button
-                  key={idx}
-                  id={`popular-q-${idx}`}
-                  onClick={() => onAskQuestion(qItem.query)}
-                  className="px-2.5 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded-md text-[11px] font-medium text-slate-100 hover:text-white transition-all cursor-pointer"
-                >
-                  {qItem.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Official National Statistics Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-6">
+      {/* 2. Official National Statistics Bar & Main Gateways */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
+        {/* Statistics Bar */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-2xs text-center">
             <div className="text-xl sm:text-2xl font-black text-[#0B3B60]">63,000+</div>
             <div className="text-[11px] sm:text-xs font-semibold text-slate-600 mt-0.5">

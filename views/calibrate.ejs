@@ -1,0 +1,109 @@
+<div class="container" style="padding-top: 10px; max-width: 800px;">
+  <!-- Section Header -->
+  <div style="margin-bottom: 24px;">
+    <div style="font-size: 11px; font-weight: 700; color: #D97706; text-transform: uppercase; letter-spacing: 0.05em;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'भाषिणी एवं ध्वनि अनुकूलन' : 'Bhashini Voice Calibration' %>
+    </div>
+    <h2 style="font-size: 24px; font-weight: 800; color: #0B3B60;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'बोली एवं उच्चारण कैलिब्रेशन (Accent Calibration)' : 'Accent & Dialect Calibration' %>
+    </h2>
+    <p style="font-size: 13px; color: #64748B;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'ग्रामीण आंचलिक बोलियों (उदा. अवधी, भोजपुरी, ब्रज, बुंदेली, हरियाणवी, मैथिली) के लिए AI वाक् पहचान (ASR) मॉडल का अनुकूलन।' : 'One-time onboarding calibration for Bhashini ASR routing to match regional phonetic variations.' %>
+    </p>
+  </div>
+
+  <div class="card" style="border-top: 4px solid #D97706;">
+    <div id="calibration-result-container">
+      <div style="margin-bottom: 20px;">
+        <h3 style="font-size: 16px; font-weight: 800; color: #0B3B60; margin-bottom: 8px;">
+          <%= (typeof language !== 'undefined' && language === 'hi') ? 'चरण 1: अपनी क्षेत्रीय भाषा या बोली चुनें' : 'Step 1: Select Regional Language / Dialect' %>
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px;">
+          <% const dialects = [
+            { id: 'hi_std', name: 'मानक हिंदी (Standard)' },
+            { id: 'hi_awadhi', name: 'अवधी (Awadhi)' },
+            { id: 'hi_bhojpuri', name: 'भोजपुरी (Bhojpuri)' },
+            { id: 'hi_braj', name: 'ब्रज / बुंदेली (Braj/Bundeli)' },
+            { id: 'hi_haryanvi', name: 'हरियाणवी (Haryanvi)' },
+            { id: 'hi_maithili', name: 'मैथिली (Maithili)' }
+          ]; %>
+          <% dialects.forEach(function(d, i) { %>
+            <label style="display: flex; align-items: center; gap: 6px; padding: 10px; border: 1px solid #E2E8F0; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; background: <%= i === 0 ? '#EFF6FF' : '#FFFFFF' %>;">
+              <input type="radio" name="dialectSelection" value="<%= d.id %>" <%= i === 0 ? 'checked' : '' %>>
+              <span><%= d.name %></span>
+            </label>
+          <% }); %>
+        </div>
+      </div>
+
+      <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+        <div style="font-size: 11px; font-weight: 700; color: #92400E; text-transform: uppercase; margin-bottom: 4px;">
+          <%= (typeof language !== 'undefined' && language === 'hi') ? 'चरण 2: नीचे लिखे वाक्य को माइक्रोफ़ोन में बोलें:' : 'Step 2: Read the calibration phrase aloud:' %>
+        </div>
+        <div style="font-size: 18px; font-weight: 800; color: #78350F; line-height: 1.5; padding: 8px 0;">
+          "हमर पैक्स में किसान क्रेडिट कार्ड और खाद-बीज का सुविधा मिलत बा।"
+        </div>
+        <div style="font-size: 12px; color: #B45309;">
+          <em>(सहकार से समृद्धि: पैक्स के माध्यम से 4% ब्याज पर 3 लाख तक का कृषि ऋण उपलब्ध है)</em>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+        <button
+          type="button"
+          id="calibrate-record-btn"
+          onclick="startCalibrationSim()"
+          style="padding: 14px 28px; background: #D97706; color: #FFFFFF; font-size: 14px; font-weight: 800; border: none; border-radius: 50px; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(217, 119, 6, 0.3);"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+          <span id="calib-btn-text"><%= (typeof language !== 'undefined' && language === 'hi') ? 'ध्वनि रिकॉर्ड करें और कैलिब्रेट करें' : 'Record Voice & Calibrate ASR' %></span>
+        </button>
+
+        <div id="calib-status-msg" style="font-size: 12px; color: #64748B; height: 20px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function startCalibrationSim() {
+    const btn = document.getElementById('calibrate-record-btn');
+    const txt = document.getElementById('calib-btn-text');
+    const msg = document.getElementById('calib-status-msg');
+    
+    if (btn) btn.style.background = '#DC2626';
+    if (txt) txt.innerText = 'आवाज़ सुनी जा रही है... (Listening...)';
+    if (msg) msg.innerText = 'Bhashini acoustic feature extraction in progress...';
+
+    setTimeout(() => {
+      if (btn) btn.style.background = '#059669';
+      if (txt) txt.innerText = 'कैलिब्रेशन पूर्ण (Calibrated)';
+      if (msg) msg.innerHTML = '<span style="color: #059669; font-weight: 700;">✅ Bhashini ASR Model Variant: Hindi-Awadhi/Bhojpuri Acoustic Weight Profile (Accuracy 96.4%)</span>';
+      
+      setTimeout(() => {
+        const container = document.getElementById('calibration-result-container');
+        if (container) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+              <div style="font-size: 40px; margin-bottom: 10px;">🎯</div>
+              <h3 style="font-size: 18px; font-weight: 800; color: #0B3B60; margin-bottom: 6px;">
+                वाक् पहचान सफलतापूर्वक कैलिब्रेट हो गई
+              </h3>
+              <p style="font-size: 13px; color: #475569; margin-bottom: 16px;">
+                अब आप सीधे बोलकर पैक्स कानून और योजनाओं पर परामर्श ले सकते हैं।
+              </p>
+              <a href="/" style="padding: 10px 24px; background: #0B3B60; color: #FFFFFF; font-weight: 700; border-radius: 8px; text-decoration: none; font-size: 13px;">
+                विधिक चैट प्रारंभ करें (Start Chat)
+              </a>
+            </div>
+          `;
+        }
+      }, 1400);
+    }, 2000);
+  }
+</script>

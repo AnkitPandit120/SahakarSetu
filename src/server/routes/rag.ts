@@ -21,10 +21,17 @@ ragRouter.post('/sync', async (req: Request, res: Response) => {
       });
     }
 
+    const hasDriveAuth = !!(customToken || config.adminAccessToken || config.googleRefreshToken);
     const report = await syncKnowledgeBase(folderId, customToken);
+    
+    const message = hasDriveAuth
+      ? `Synchronization complete. Indexed ${report.newFilesIndexed} new, updated ${report.modifiedFilesUpdated}, removed ${report.deletedFilesRemoved}, skipped ${report.unchangedFilesSkipped} unchanged.`
+      : `Synchronized ${report.totalDriveFilesFound} verified statutory knowledge documents (Model PACS Bye-Laws, PMFBY, MSCS Act). Connect Google Drive with OAuth to sync custom private documents.`;
+
     res.json({
       success: true,
-      message: `Synchronization complete. Indexed ${report.newFilesIndexed} new, updated ${report.modifiedFilesUpdated}, removed ${report.deletedFilesRemoved}, skipped ${report.unchangedFilesSkipped} unchanged.`,
+      requiresAuth: !hasDriveAuth,
+      message,
       report
     });
   } catch (err: any) {

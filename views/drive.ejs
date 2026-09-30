@@ -1,0 +1,25 @@
+<div class="container" style="padding-top: 10px;">
+  <!-- Section Header -->
+  <div style="margin-bottom: 24px;">
+    <div style="font-size: 11px; font-weight: 700; color: #D97706; text-transform: uppercase; letter-spacing: 0.05em;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'गूगल ड्राइव आरएजी ज्ञान भंडार' : 'Google Drive RAG Knowledge Base' %>
+    </div>
+    <h2 style="font-size: 24px; font-weight: 800; color: #0B3B60;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'सहकारी विधिक दस्तावेज एवं वेक्टर इंडेक्स' : 'Cooperative Legal Documents & Vector Index' %>
+    </h2>
+    <p style="font-size: 13px; color: #64748B;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'गूगल ड्राइव फ़ोल्डर से सीधे निकाले गए विधिक नियम, मॉडल उप-नियम 2024 व नाबार्ड परिपत्र।' : 'PDF, Word, and Google Docs synchronized from Drive into 768-dimensional semantic embeddings.' %>
+    </p>
+  </div>
+
+  <!-- Loading indicator -->
+  <div id="drive-sync-spinner" class="htmx-indicator" style="justify-content: center; padding: 20px;">
+    <div class="spinner"></div>
+    <span style="font-size: 13px; font-weight: 700; color: #0B3B60; margin-left: 10px;">Syncing with Google Drive...</span>
+  </div>
+
+  <!-- Drive Status Panel (swappable with HTMX) -->
+  <div id="drive-status-panel">
+    <%- include('partials/drive-status', { stats: stats, folderId: folderId, sources: sources, message: null, language: language }) %>
+  </div>
+</div>

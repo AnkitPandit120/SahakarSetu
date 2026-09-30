@@ -1,0 +1,138 @@
+<div class="container" style="padding-top: 10px; max-width: 800px;">
+  <!-- Section Header -->
+  <div style="margin-bottom: 24px;">
+    <div style="font-size: 11px; font-weight: 700; color: #D97706; text-transform: uppercase; letter-spacing: 0.05em;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'सहकारी लोकपाल एवं शिकायत निवारण' : 'Cooperative Ombudsman & Grievance Redressal' %>
+    </div>
+    <h2 style="font-size: 24px; font-weight: 800; color: #0B3B60;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'सहकार शिकायत एवं विधिक वाद पंजीकरण' : 'PACS & Cooperative Grievance Lodgement' %>
+    </h2>
+    <p style="font-size: 13px; color: #64748B;">
+      <%= (typeof language !== 'undefined' && language === 'hi') ? 'मल्टी-स्टेट सहकारी समिति अधिनियम 2023 के तहत वैधानिक शिकायत दर्ज करें। तत्काल डिजिटल संदर्भ संख्या (Ticket ID) प्राप्त करें।' : 'File statutory complaints under MSCS Act 2023. Instant electronic acknowledgement generated via HTMX.' %>
+    </p>
+  </div>
+
+  <div class="card" style="border-top: 4px solid #0B3B60;">
+    <div id="grievance-response-container">
+      <form
+        id="grievance-form"
+        hx-post="/grievance/submit"
+        hx-target="#grievance-response-container"
+        hx-swap="innerHTML"
+        hx-indicator="#grievance-spinner"
+        style="display: flex; flex-direction: column; gap: 16px;"
+      >
+        <input type="hidden" name="language" value="<%= (typeof language !== 'undefined' && language === 'hi') ? 'hi' : 'en' %>">
+
+        <!-- Applicant Name & Mobile -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 700; color: #1E293B; margin-bottom: 6px;">
+              <%= (typeof language !== 'undefined' && language === 'hi') ? 'आवेदक / सदस्य का पूरा नाम *' : 'Applicant / Member Full Name *' %>
+            </label>
+            <input
+              type="text"
+              name="name"
+              required
+              placeholder="<%= (typeof language !== 'undefined' && language === 'hi') ? 'उदा. रमेश सिंह' : 'e.g. Ramesh Singh' %>"
+              class="form-control"
+            >
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 700; color: #1E293B; margin-bottom: 6px;">
+              <%= (typeof language !== 'undefined' && language === 'hi') ? 'मोबाइल नंबर *' : 'Mobile Number *' %>
+            </label>
+            <input
+              type="tel"
+              name="mobile"
+              required
+              pattern="[0-9]{10}"
+              placeholder="10-digit mobile number"
+              class="form-control"
+            >
+          </div>
+        </div>
+
+        <!-- PACS / Cooperative Name & State -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 700; color: #1E293B; margin-bottom: 6px;">
+              <%= (typeof language !== 'undefined' && language === 'hi') ? 'संबंधित पैक्स / समिति का नाम *' : 'PACS / Cooperative Society Name *' %>
+            </label>
+            <input
+              type="text"
+              name="pacsName"
+              required
+              placeholder="<%= (typeof language !== 'undefined' && language === 'hi') ? 'उदा. आदर्श ग्राम पैक्स, ब्लॉक-सदर' : 'e.g. Adarsh Gram PACS' %>"
+              class="form-control"
+            >
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 700; color: #1E293B; margin-bottom: 6px;">
+              <%= (typeof language !== 'undefined' && language === 'hi') ? 'राज्य / संघ राज्य क्षेत्र *' : 'State / UT *' %>
+            </label>
+            <select name="state" class="form-control" required>
+              <option value="Uttar Pradesh">Uttar Pradesh (उत्तर प्रदेश)</option>
+              <option value="Madhya Pradesh">Madhya Pradesh (मध्य प्रदेश)</option>
+              <option value="Bihar">Bihar (बिहार)</option>
+              <option value="Rajasthan">Rajasthan (राजस्थान)</option>
+              <option value="Maharashtra">Maharashtra (महाराष्ट्र)</option>
+              <option value="Gujarat">Gujarat (गुजरात)</option>
+              <option value="Haryana">Haryana (हरियाणा)</option>
+              <option value="Punjab">Punjab (पंजाब)</option>
+              <option value="Other">Other / Other States</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Issue Category -->
+        <div>
+          <label style="display: block; font-size: 12px; font-weight: 700; color: #1E293B; margin-bottom: 6px;">
+            <%= (typeof language !== 'undefined' && language === 'hi') ? 'शिकायत का वैधानिक विषय (Issue Category) *' : 'Statutory Grievance Category *' %>
+          </label>
+          <select name="issueType" class="form-control" required>
+            <option value="pacs_membership"><%= (typeof language !== 'undefined' && language === 'hi') ? 'पैक्स सदस्यता / शेयर हस्तांतरण अस्वीकृति (Membership Rejection)' : 'PACS Membership / Share Issue' %></option>
+            <option value="kcc_loan"><%= (typeof language !== 'undefined' && language === 'hi') ? 'किसान क्रेडिट कार्ड (KCC) ऋण / 4% ब्याज छूट समस्या' : 'KCC Loan / 4% Subvention Denial' %></option>
+            <option value="pmfby_claim"><%= (typeof language !== 'undefined' && language === 'hi') ? 'फसल बीमा (PMFBY) 72 घंटे क्षति क्लेम समस्या' : 'Crop Damage Claim / PMFBY Dispute' %></option>
+            <option value="fertilizer_pds"><%= (typeof language !== 'undefined' && language === 'hi') ? 'उर्वरक / बीज वितरण एवं सीएससी सेवा बाधा' : 'Fertilizer/Seed Supply & CSC Irregularity' %></option>
+            <option value="election_audit"><%= (typeof language !== 'undefined' && language === 'hi') ? 'समिति चुनाव / वार्षिक आम सभा (AGM) / ऑडिट अनियमितता' : 'PACS Election / AGM / Audit Irregularity' %></option>
+            <option value="other"><%= (typeof language !== 'undefined' && language === 'hi') ? 'अन्य वैधानिक मामला' : 'Other Grievance' %></option>
+          </select>
+        </div>
+
+        <!-- Detailed Description -->
+        <div>
+          <label style="display: block; font-size: 12px; font-weight: 700; color: #1E293B; margin-bottom: 6px;">
+            <%= (typeof language !== 'undefined' && language === 'hi') ? 'शिकायत का संक्षिप्त विवरण (Description) *' : 'Grievance Particulars & Summary *' %>
+          </label>
+          <textarea
+            name="description"
+            rows="4"
+            required
+            placeholder="<%= (typeof language !== 'undefined' && language === 'hi') ? 'घटना की तिथि, अधिकारी का पदनाम एवं समस्या का विवरण लिखें...' : 'Provide specific details, dates, and names regarding the grievance...' %>"
+            class="form-control"
+            style="resize: vertical;"
+          ></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+          <div id="grievance-spinner" class="htmx-indicator" style="align-items: center; gap: 8px;">
+            <div class="spinner"></div>
+            <span style="font-size: 12px; color: #0B3B60; font-weight: 700;">
+              <%= (typeof language !== 'undefined' && language === 'hi') ? 'शिकायत दर्ज की जा रही है...' : 'Lodging statutory grievance...' %>
+            </span>
+          </div>
+
+          <button
+            type="submit"
+            style="padding: 12px 28px; background-color: #0B3B60; color: #FFFFFF; font-weight: 700; font-size: 14px; border: none; border-radius: 8px; cursor: pointer;"
+          >
+            <%= (typeof language !== 'undefined' && language === 'hi') ? 'शिकायत दर्ज करें (Submit)' : 'Submit Grievance' %>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -125,35 +125,65 @@ class UnifiedVectorStore {
   }
 
   /**
-   * Vector search with cosine similarity and optional category filtering
+   * Vector and keyword hybrid search with cosine similarity and lexical token overlap
    */
   public search(
     queryEmbedding: number[],
     topK: number = 4,
     categoryFilter?: string,
-    minSimilarityThreshold: number = 0.35
+    minSimilarityThreshold: number = 0.30,
+    queryText?: string
   ): SearchResultChunk[] {
     const results: SearchResultChunk[] = [];
     const normCategory = categoryFilter && categoryFilter !== 'all' ? categoryFilter.toLowerCase().trim() : null;
+    const queryTokens = queryText ? tokenizeText(queryText) : [];
 
     for (const chunk of this.chunks.values()) {
       // Category filter check
       if (normCategory && chunk.category.toLowerCase() !== normCategory) {
-        // Allow fallback if chunk matches strongly
+        // Continue if strictly filtered
       }
 
-      const score = cosineSimilarity(queryEmbedding, chunk.embedding);
-      if (score >= minSimilarityThreshold) {
+      const cosineScore = cosineSimilarity(queryEmbedding, chunk.embedding);
+      
+      // Calculate lexical token overlap score with stem matching
+      let lexicalScore = 0;
+      if (queryTokens.length > 0) {
+        const chunkTokens = tokenizeText(`${chunk.heading || ''} ${chunk.section || ''} ${chunk.chapter || ''} ${chunk.text}`);
+        let matchCount = 0;
+        for (const qt of queryTokens) {
+          const qStem = stemWord(qt);
+          const matched = chunkTokens.some(ct => ct === qt || stemWord(ct) === qStem || (ct.length > 4 && qt.length > 4 && (ct.startsWith(qt.slice(0, 4)) || qt.startsWith(ct.slice(0, 4)))));
+          if (matched) {
+            matchCount++;
+          }
+        }
+        lexicalScore = matchCount / Math.max(queryTokens.length, 1);
+      }
+
+      // Hybrid combined score: weighted blend of cosine similarity and keyword overlap
+      const combinedScore = lexicalScore > 0
+        ? Math.max(cosineScore, (cosineScore * 0.4) + (lexicalScore * 0.6))
+        : cosineScore;
+
+      if (combinedScore >= minSimilarityThreshold) {
         results.push({
           ...chunk,
-          similarityScore: score
+          similarityScore: combinedScore
         });
       }
     }
 
-    // Sort by cosine similarity descending
+    // Sort by combined score descending
     results.sort((a, b) => b.similarityScore - a.similarityScore);
     return results.slice(0, topK);
+  }
+
+  /**
+   * Reseed verified baseline statutory documents
+   */
+  public reseedVerifiedDocuments(): void {
+    this.initDefaultSeedDocuments();
   }
 
   /**
@@ -213,29 +243,32 @@ class UnifiedVectorStore {
         chunks: [
           {
             chunkIndex: 0,
-            text: 'Section 4: Multipurpose Mandate of PACS. Under the Model Bye-laws 2023 issued by the Ministry of Cooperation, Primary Agricultural Credit Societies are authorized to undertake 25+ business activities including input distribution, fertilizer dealership, custom hiring centres, godowns/cold storages, LPG/petrol distributorship, and digital Common Service Centres (CSC).',
+            text: 'Section 4: Multipurpose Mandate of PACS (पैक्स बहुउद्देशीय गतिविधियां). Under the Model Bye-laws 2023 issued by the Ministry of Cooperation, Primary Agricultural Credit Societies are authorized to undertake 25+ business activities including input distribution, fertilizer dealership, custom hiring centres, godowns/cold storages, LPG/petrol distributorship, and digital Common Service Centres (CSC). उर्वरक, बीज, सीएससी केंद्र।',
             pageNumber: 4,
             chapter: 'Chapter II: Objectives & Mandates',
             section: 'Section 4.1',
             clause: 'Clause 4(a)',
+            heading: 'PACS Business Activities Multipurpose खाद बीज सीएससी',
             tokenEstimate: 70
           },
           {
             chunkIndex: 1,
-            text: 'Section 8: Membership and Voting Rights in PACS. Any individual residing within the operational jurisdiction of the PACS who is an agriculturist, artisan, or self-employed rural worker is eligible for regular membership. Every regular member has strictly ONE vote in the General Body, regardless of the number of share capital units held.',
+            text: 'Section 8: Membership and Voting Rights in PACS (पैक्स सदस्यता एवं मतदान अधिकार). Any individual residing within the operational jurisdiction of the PACS who is an agriculturist, artisan, or self-employed rural worker is eligible for regular membership. Every regular member has strictly ONE vote in the General Body, regardless of the number of share capital units held. एक सदस्य, एक मत का अधिकार।',
             pageNumber: 8,
             chapter: 'Chapter III: Membership',
             section: 'Section 8.2',
             clause: 'Clause 8(1)',
+            heading: 'Membership Voting Rights One Member One Vote पैक्स सदस्यता वोटिंग अधिकार',
             tokenEstimate: 65
           },
           {
             chunkIndex: 2,
-            text: 'Section 14: Board of Directors Composition. The Managing Committee / Board of Directors shall consist of 11 to 15 members. Mandatory statutory reservation requires at least two seats for Women and one seat each for Scheduled Castes (SC) / Scheduled Tribes (ST). Tenure of the Board is 5 years.',
+            text: 'Section 14: Board of Directors Composition (प्रबंध समिति एवं आरक्षण). The Managing Committee / Board of Directors shall consist of 11 to 15 members. Mandatory statutory reservation requires at least two seats for Women and one seat each for Scheduled Castes (SC) / Scheduled Tribes (ST). Tenure of the Board is 5 years. महिला और अनुसूचित जाति आरक्षण।',
             pageNumber: 14,
             chapter: 'Chapter V: Management and Elections',
             section: 'Section 14.3',
             clause: 'Clause 14(b)',
+            heading: 'Board Directors Reservation Women SC ST प्रबंध समिति आरक्षण चुनाव',
             tokenEstimate: 60
           }
         ]
@@ -252,20 +285,22 @@ class UnifiedVectorStore {
         chunks: [
           {
             chunkIndex: 0,
-            text: 'Chapter 4, Section 4.2: Premium Rates for Farmers. Farmers are required to pay a maximum capped premium of 2.0% of Sum Insured for all Kharif food & oilseed crops, 1.5% for all Rabi crops, and 5.0% for annual commercial/horticultural crops. The entire remaining actuarial premium is subsidized 50:50 between Central and State Governments.',
+            text: 'Chapter 4, Section 4.2: Premium Rates for Farmers (फसल बीमा प्रीमियम दरें). Farmers are required to pay a maximum capped premium of 2.0% of Sum Insured for all Kharif food & oilseed crops, 1.5% for all Rabi crops, and 5.0% for annual commercial/horticultural crops. The entire remaining actuarial premium is subsidized 50:50 between Central and State Governments. खरीफ 2%, रबी 1.5% प्रीमियम।',
             pageNumber: 18,
             chapter: 'Chapter 4: Premium Rates & Subsidies',
             section: 'Section 4.2',
             clause: 'Clause 4.2.1',
+            heading: 'Crop Insurance Premium Rates Kharif Rabi फसल बीमा प्रीमियम दरें',
             tokenEstimate: 75
           },
           {
             chunkIndex: 1,
-            text: 'Chapter 3, Section 3.2: 72-Hour Localized Calamity Intimation Rule. In the event of localized losses due to hailstorm, landslide, inundation, or cloudburst, the insured farmer MUST report the loss within 72 hours of the occurrence through the Crop Insurance Mobile App, Toll-free Helpline (14447), or local Agriculture/PACS officer.',
+            text: 'Chapter 3, Section 3.2: 72-Hour Localized Calamity Intimation Rule (72 घंटे में नुकसान की सूचना). In the event of localized losses due to hailstorm, landslide, inundation, or cloudburst, the insured farmer MUST report the loss within 72 hours of the occurrence through the Crop Insurance Mobile App, Toll-free Helpline (14447), or local Agriculture/PACS officer. फसल नुकसान की शिकायत 72 घंटे में अनिवार्य।',
             pageNumber: 24,
             chapter: 'Chapter 3: Assessment of Loss',
             section: 'Section 3.2',
             clause: 'Clause 3.2.4',
+            heading: '72 Hours Localized Loss Intimation Claim Helpline 14447 फसल नुकसान 72 घंटे शिकायत दावा',
             tokenEstimate: 70
           }
         ]
@@ -282,20 +317,22 @@ class UnifiedVectorStore {
         chunks: [
           {
             chunkIndex: 0,
-            text: 'Section 85A: Establishment of Cooperative Ombudsman. The Central Government shall appoint one or more Cooperative Ombudsmen with territorial jurisdiction to inquire into grievances and complaints made by members of multi-state cooperative societies relating to deposits, elections, or corruption.',
+            text: 'Section 85A: Establishment of Cooperative Ombudsman (सहकारी लोकपाल की नियुक्ति). The Central Government shall appoint one or more Cooperative Ombudsmen with territorial jurisdiction to inquire into grievances and complaints made by members of multi-state cooperative societies relating to deposits, elections, or corruption. सहकारी लोकपाल शिकायत निवारण।',
             pageNumber: 31,
             chapter: 'Chapter X: Settlement of Disputes',
             section: 'Section 85A',
             clause: 'Clause 85A(1)',
+            heading: 'Cooperative Ombudsman Grievances Complaints सहकारी लोकपाल शिकायत',
             tokenEstimate: 60
           },
           {
             chunkIndex: 1,
-            text: 'Section 84: Reference of Disputes to Arbitration. Any dispute touching the constitution, management, or business of a multi-state cooperative society among members or past members shall be referred to the Central Registrar for arbitration.',
+            text: 'Section 84: Reference of Disputes to Arbitration (विवादों का मध्यस्थता निपटारा). Any dispute touching the constitution, management, or business of a multi-state cooperative society among members or past members shall be referred to the Central Registrar for arbitration. सीआरसीएस मध्यस्थता।',
             pageNumber: 29,
             chapter: 'Chapter X: Settlement of Disputes',
             section: 'Section 84',
             clause: 'Clause 84(1)',
+            heading: 'Disputes Arbitration Central Registrar CRCS विवाद मध्यस्थता',
             tokenEstimate: 55
           }
         ]
@@ -350,7 +387,7 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
  */
 function generateSimpleSemanticVector(text: string, dimensions: number = 768): number[] {
   const vec = new Array(dimensions).fill(0);
-  const words = text.toLowerCase().match(/\b\w+\b/g) || [text];
+  const words = text.toLowerCase().match(/[\w\u0900-\u097F]+/gu) || [text];
   for (let i = 0; i < words.length; i++) {
     const word = words[i];
     let hash = 0;
@@ -368,6 +405,33 @@ function generateSimpleSemanticVector(text: string, dimensions: number = 768): n
     for (let i = 0; i < dimensions; i++) vec[i] = vec[i] / norm;
   }
   return vec;
+}
+
+/**
+ * Tokenize text into lowercased keywords for lexical matching
+ */
+function tokenizeText(text: string): string[] {
+  if (!text) return [];
+  const stopwords = new Set([
+    'a', 'an', 'the', 'and', 'or', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+    'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does',
+    'what', 'who', 'where', 'when', 'why', 'how', 'which', 'under', 'from', 'can', 'may'
+  ]);
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s\u0900-\u097F]/g, ' ')
+    .split(/\s+/)
+    .filter(t => t.length > 2 && !stopwords.has(t));
+}
+
+/**
+ * Simple English stemmer for root words
+ */
+function stemWord(word: string): string {
+  if (!word || word.length <= 3) return word;
+  return word
+    .replace(/(ing|edly|ingly|ed|es|s|ment|tion|ance|ence|able|ible)$/i, '')
+    .replace(/(men|man)$/i, 'man');
 }
 
 export const vectorStore = new UnifiedVectorStore();

@@ -1,0 +1,10 @@
+<select
+  name="lang"
+  hx-get="/"
+  hx-target="body"
+  hx-push-url="true"
+  style="background: #0B3B60; color: #FDE68A; font-weight: 700; border: 1px solid #D97706; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; outline: none;"
+>
+  <option value="hi" <%= (typeof language !== 'undefined' && language === 'hi') ? 'selected' : '' %>>🇮🇳 हिंदी (Hindi)</option>
+  <option value="en" <%= (typeof language !== 'undefined' && language === 'en') ? 'selected' : '' %>>🌐 English</option>
+</select>

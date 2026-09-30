@@ -77,7 +77,7 @@ export async function generateEmbeddingsBatch(
  */
 function generateDeterministicFallbackVector(text: string, dimensions: number = 768): number[] {
   const vector = new Array(dimensions).fill(0);
-  const words = text.toLowerCase().match(/\b\w+\b/g) || [text];
+  const words = text.toLowerCase().match(/[\w\u0900-\u097F]+/gu) || [text];
 
   for (let i = 0; i < words.length; i++) {
     const word = words[i];

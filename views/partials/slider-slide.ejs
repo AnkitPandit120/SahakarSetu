@@ -1,0 +1,47 @@
+<div class="slider-card" id="leader-slider-card">
+  <div class="slider-top">
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <span style="width: 8px; height: 8px; border-radius: 50%; background-color: #10B981; display: inline-block;"></span>
+      <span style="color: #FDE68A; font-weight: 700; font-size: 11px; text-transform: uppercase;">
+        <%= (typeof language !== 'undefined' && language === 'hi') ? slide.tagHi : slide.tagEn %>
+      </span>
+    </div>
+    <span style="font-family: monospace; font-size: 11px; color: #CBD5E1;">0<%= slideIndex + 1 %> / 04</span>
+  </div>
+
+  <div class="slider-body">
+    <div class="leader-row">
+      <img src="<%= slide.image %>" alt="<%= (typeof language !== 'undefined' && language === 'hi') ? slide.dignitaryHi : slide.dignitaryEn %>" class="leader-avatar" onerror="this.src='/images/modi_portrait.jpg'">
+      <div>
+        <h4 class="leader-name"><%= (typeof language !== 'undefined' && language === 'hi') ? slide.dignitaryHi : slide.dignitaryEn %></h4>
+        <div class="leader-role"><%= (typeof language !== 'undefined' && language === 'hi') ? slide.roleHi : slide.roleEn %></div>
+        <div style="font-size: 10px; color: #94A3B8; margin-top: 2px;">
+          🏛️ <%= (typeof language !== 'undefined' && language === 'hi') ? slide.occasionHi : slide.occasionEn %>
+        </div>
+      </div>
+    </div>
+
+    <div class="leader-quote">
+      &ldquo;<%= (typeof language !== 'undefined' && language === 'hi') ? slide.quoteHi : slide.quoteEn %>&rdquo;
+    </div>
+
+    <button
+      type="button"
+      onclick="insertInquiry('<%= slide.query %>')"
+      style="width: 100%; padding: 8px 12px; background: linear-gradient(to right, #F59E0B, #D97706); color: #000; border: none; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
+    >
+      <span>✨ <%= (typeof language !== 'undefined' && language === 'hi') ? 'संबंधित नियम व योजना पूछें' : 'Ask Related Statutory Rules' %></span>
+      <span>↗</span>
+    </button>
+  </div>
+
+  <div class="slider-nav">
+    <button type="button" class="slider-btn" onclick="setSlide(<%= (slideIndex - 1 + 4) % 4 %>)">‹ Prev</button>
+    <div style="display: flex; gap: 6px;">
+      <% for (let i = 0; i < 4; i++) { %>
+        <span onclick="setSlide(<%= i %>)" style="cursor: pointer; height: 6px; border-radius: 3px; display: inline-block; transition: all 0.2s; <%= i === slideIndex ? 'width: 20px; background-color: #F59E0B;' : 'width: 6px; background-color: rgba(255,255,255,0.3);' %>"></span>
+      <% } %>
+    </div>
+    <button type="button" class="slider-btn" onclick="setSlide(<%= (slideIndex + 1) % 4 %>)">Next ›</button>
+  </div>
+</div>

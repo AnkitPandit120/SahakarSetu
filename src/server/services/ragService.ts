@@ -41,12 +41,40 @@ export async function syncKnowledgeBase(
   customToken?: string
 ): Promise<SyncReport> {
   const folderId = customFolderId || config.driveKnowledgeFolderId;
+
+  vectorStore.setSyncState('indexing');
+
+  let token: string | null = null;
+  try {
+    token = await getAuthorizedDriveToken(customToken);
+  } catch (authErr: any) {
+    // When Google Drive token is not configured, safely refresh verified statutory knowledge base
+    console.log('Google Drive OAuth token not provided. Refreshing verified statutory seed knowledge base.');
+    vectorStore.reseedVerifiedDocuments();
+    vectorStore.setSyncState('synced');
+    const existingDocs = vectorStore.getAllDocuments();
+    return {
+      timestamp: new Date().toISOString(),
+      totalDriveFilesFound: existingDocs.length,
+      newFilesIndexed: 0,
+      modifiedFilesUpdated: 0,
+      deletedFilesRemoved: 0,
+      unchangedFilesSkipped: existingDocs.length,
+      failedFilesCount: 0,
+      failedDetails: [],
+      indexedDocuments: existingDocs.map(d => ({
+        fileId: d.fileId,
+        fileName: d.fileName,
+        category: d.category,
+        action: 'skipped',
+        chunkCount: d.chunkCount
+      }))
+    };
+  }
+
   if (!folderId) {
     throw new Error('No Google Drive Knowledge Folder ID specified. Please set DRIVE_KNOWLEDGE_FOLDER_ID in environment or configure it in the Admin settings.');
   }
-
-  vectorStore.setSyncState('indexing');
-  const token = await getAuthorizedDriveToken(customToken);
 
   const report: SyncReport = {
     timestamp: new Date().toISOString(),
@@ -188,17 +216,18 @@ export async function handleUserChatQuery(payload: ChatQueryPayload): Promise<Ch
   // 1. Generate query embedding
   const queryEmbedding = await generateEmbedding(message);
 
-  // 2. Perform vector search in vector database
-  const minSimilarity = 0.38;
+  // 2. Perform vector search in vector database with hybrid matching
+  const minSimilarity = 0.30;
   const retrievedChunks: SearchResultChunk[] = vectorStore.search(
     queryEmbedding,
     4,
     category,
-    minSimilarity
+    minSimilarity,
+    message
   );
 
   // 3. If high-confidence RAG passages found in vector DB, synthesize with RAG context
-  if (retrievedChunks.length > 0 && retrievedChunks[0].similarityScore >= 0.40) {
+  if (retrievedChunks.length > 0 && retrievedChunks[0].similarityScore >= 0.35) {
     return await generateGroundedRAGAnswer(message, language, retrievedChunks);
   }
 

@@ -1,0 +1,68 @@
+<div class="container" style="padding-top: 10px;">
+  <!-- Section Title -->
+  <div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <div style="font-size: 11px; font-weight: 700; color: #D97706; text-transform: uppercase; letter-spacing: 0.05em;">
+        <%= (typeof language !== 'undefined' && language === 'hi') ? 'सरकारी सहायता व विधिक उप-नियम' : 'Statutory Schemes & Bye-Laws' %>
+      </div>
+      <h2 style="font-size: 24px; font-weight: 800; color: #0B3B60;">
+        <%= (typeof language !== 'undefined' && language === 'hi') ? 'सत्यापित केंद्रीय एवं राज्य सहकारी योजनाएं' : 'Verified Central & State Cooperative Schemes' %>
+      </h2>
+      <p style="font-size: 13px; color: #64748B;">
+        <%= (typeof language !== 'undefined' && language === 'hi') ? 'पैक्स सुदृढ़ीकरण, फसल बीमा, केसीसी, डेयरी व बहुउद्देशीय योजनाओं का प्रत्यक्ष विवरण।' : 'Direct guidelines for PACS modernization, PMFBY, KCC subventions, and dairy development.' %>
+      </p>
+    </div>
+  </div>
+
+  <!-- Filter & Search Controls with HTMX live search -->
+  <div style="background: #FFFFFF; padding: 16px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between;">
+      <!-- Category Filter Pills -->
+      <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+        <% const categories = [
+          { id: 'all', label: (typeof language !== 'undefined' && language === 'hi') ? 'सभी योजनाएं' : 'All Schemes' },
+          { id: 'pacs', label: 'PACS Modernization' },
+          { id: 'credit', label: 'Credit & KCC' },
+          { id: 'agriculture', label: 'Agriculture & PMFBY' },
+          { id: 'dairy', label: 'Dairy & Fisheries' },
+          { id: 'infrastructure', label: 'Storage & Infrastructure' }
+        ]; %>
+        <% categories.forEach(function(cat) { %>
+          <button
+            type="button"
+            hx-get="/schemes/filter?category=<%= cat.id %>"
+            hx-target="#schemes-list-container"
+            hx-indicator="#schemes-filter-spinner"
+            style="padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #CBD5E1; background: #F8FAFC; color: #334155; cursor: pointer;"
+          >
+            <%= cat.label %>
+          </button>
+        <% }); %>
+      </div>
+
+      <!-- Live Search Input -->
+      <div style="position: relative; width: 100%; max-width: 320px;">
+        <input
+          type="text"
+          name="search"
+          placeholder="<%= (typeof language !== 'undefined' && language === 'hi') ? 'योजना या मंत्रालय खोजें...' : 'Search scheme or ministry...' %>"
+          hx-get="/schemes/filter"
+          hx-trigger="keyup changed delay:300ms, search"
+          hx-target="#schemes-list-container"
+          hx-indicator="#schemes-filter-spinner"
+          style="width: 100%; padding: 8px 12px; font-size: 13px; border-radius: 6px; border: 1px solid #CBD5E1; outline: none;"
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading indicator -->
+  <div id="schemes-filter-spinner" class="htmx-indicator" style="justify-content: center; padding: 20px;">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Schemes List Container (HTMX swapped) -->
+  <div id="schemes-list-container">
+    <%- include('partials/scheme-list', { schemes: schemes, language: language }) %>
+  </div>
+</div>

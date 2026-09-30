@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="<%= (typeof language !== 'undefined' && language === 'hi') ? 'hi' : 'en' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || "Sahakar Sahayak (सहकार सहायक) - Multilingual Cooperative Governance" %></title>
+  <meta name="description" content="Ultra-lightweight server-rendered assistant for PACS and rural cooperatives, optimized for low-end devices.">
+  <meta name="theme-color" content="#0B3B60">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Handcrafted Pure CSS (Zero Bloat, <12KB) -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!-- Standalone Local HTMX (No CDN, ~14KB minified) -->
+  <script src="/js/htmx.min.js"></script>
+</head>
+<body class="<%= (typeof isKiosk !== 'undefined' && isKiosk) ? 'kiosk-mode' : '' %>">
+  <!-- Top Government Ribbon -->
+  <div class="gov-topbar">
+    <div class="container gov-topbar-inner">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="color: #FCD34D;">🇮🇳</span>
+        <span><%= (typeof language !== 'undefined' && language === 'hi') ? 'भारत सरकार | सहकारिता मंत्रालय' : 'Government of India | Ministry of Cooperation' %></span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <% if (typeof isKiosk !== 'undefined' && isKiosk) { %>
+          <span style="font-size: 10px; background: #D97706; color: #FFFFFF; padding: 2px 6px; border-radius: 4px; font-weight: 800;">KIOSK TOUCHSCREEN</span>
+        <% } %>
+        <span id="pwa-status" style="font-size: 10px; color: #86EFAC;">⚡ PWA Shell Active</span>
+        <%- include('partials/language-selector', { language: language }) %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header & Navigation -->
+  <header class="gov-header">
+    <div class="container gov-header-inner">
+      <a href="/<%= (typeof isKiosk !== 'undefined' && isKiosk) ? '?kiosk=true' : '' %>" class="brand-wrapper">
+        <div class="emblem-icon">🏛️</div>
+        <div>
+          <div class="brand-title">Sahakar Sahayak (सहकार सहायक)</div>
+          <div class="brand-subtitle"><%= (typeof language !== 'undefined' && language === 'hi') ? 'राष्ट्रीय पैक्स एवं सहकारी विधिक सहायता पोर्टल' : 'National PACS & Statutory Cooperative Governance' %></div>
+        </div>
+      </a>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs" id="main-nav">
+        <a href="/<%= (typeof isKiosk !== 'undefined' && isKiosk) ? '?kiosk=true' : '' %>" class="nav-tab-btn <%= (typeof currentTab !== 'undefined' && currentTab === 'chat') ? 'active' : '' %>">
+          <span>💬</span>
+          <span><%= (typeof language !== 'undefined' && language === 'hi') ? 'विधिक सलाहकार' : 'AI Advisor' %></span>
+        </a>
+        <a href="/schemes<%= (typeof isKiosk !== 'undefined' && isKiosk) ? '?kiosk=true' : '' %>" class="nav-tab-btn <%= (typeof currentTab !== 'undefined' && currentTab === 'schemes') ? 'active' : '' %>">
+          <span>📜</span>
+          <span><%= (typeof language !== 'undefined' && language === 'hi') ? 'सरकारी योजनाएं' : 'PACS Schemes' %></span>
+        </a>
+        <a href="/services<%= (typeof isKiosk !== 'undefined' && isKiosk) ? '?kiosk=true' : '' %>" class="nav-tab-btn <%= (typeof currentTab !== 'undefined' && currentTab === 'services') ? 'active' : '' %>">
+          <span>🛠️</span>
+          <span><%= (typeof language !== 'undefined' && language === 'hi') ? 'सहकारी सेवाएं' : 'Services' %></span>
+        </a>
+        <a href="/grievance<%= (typeof isKiosk !== 'undefined' && isKiosk) ? '?kiosk=true' : '' %>" class="nav-tab-btn <%= (typeof currentTab !== 'undefined' && currentTab === 'grievance') ? 'active' : '' %>">
+          <span>⚖️</span>
+          <span><%= (typeof language !== 'undefined' && language === 'hi') ? 'शिकायत दर्ज करें' : 'Grievance' %></span>
+        </a>
+        <a href="/calibrate<%= (typeof isKiosk !== 'undefined' && isKiosk) ? '?kiosk=true' : '' %>" class="nav-tab-btn <%= (typeof currentTab !== 'undefined' && currentTab === 'calibrate') ? 'active' : '' %>">
+          <span>🎙️</span>
+          <span><%= (typeof language !== 'undefined' && language === 'hi') ? 'ध्वनि कैलिब्रेशन' : 'Calibration' %></span>
+        </a>
+        <a href="/about<%= (typeof isKiosk !== 'undefined' && isKiosk) ? '?kiosk=true' : '' %>" class="nav-tab-btn <%= (typeof currentTab !== 'undefined' && currentTab === 'about') ? 'active' : '' %>">
+          <span>ℹ️</span>
+          <span><%= (typeof language !== 'undefined' && language === 'hi') ? 'परिचय' : 'About' %></span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Dynamic View Content Body -->
+  <main class="main-content">
+    <%- body %>
+  </main>
+
+  <!-- Footer -->
+  <footer class="gov-footer">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <p style="font-weight: 700; color: #FFFFFF;">सहकार से समृद्धि (Sahakar Se Samriddhi)</p>
+        <p style="color: #94A3B8; font-size: 11px;">Model PACS Bye-Laws 2024 & MSCS Act 2023 Statutory Guidance System</p>
+      </div>
+      <div style="display: flex; gap: 12px; font-size: 11px;">
+        <% if (typeof isKiosk !== 'undefined' && isKiosk) { %>
+          <a href="/" style="color: #FCD34D;">Standard Mode</a>
+        <% } else { %>
+          <a href="/?kiosk=true" style="color: #FCD34D;">⚡ Kiosk Mode (Raspberry Pi)</a>
+        <% } %>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Lightweight PWA Service Worker Registration Script -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((reg) => {
+            console.log('PWA Service Worker registered:', reg.scope);
+            const el = document.getElementById('pwa-status');
+            if (el) el.innerText = '⚡ Offline Ready';
+          })
+          .catch((err) => console.log('SW registration skipped', err));
+      });
+    }
+
+    // Leader Slide Auto-Rotation helper for HTMX
+    let currentSlide = 0;
+    const totalSlides = 4;
+    function autoNextSlide() {
+      currentSlide = (currentSlide + 1) % totalSlides;
+      const el = document.getElementById('hero-slider-wrapper');
+      if (el) {
+        htmx.ajax('GET', '/slider/slide/' + currentSlide, { target: '#hero-slider-wrapper', swap: 'innerHTML' });
+      }
+    }
+    let slideTimer = setInterval(autoNextSlide, 6000);
+
+    function setSlide(idx) {
+      currentSlide = idx;
+      clearInterval(slideTimer);
+      htmx.ajax('GET', '/slider/slide/' + currentSlide, { target: '#hero-slider-wrapper', swap: 'innerHTML' });
+      slideTimer = setInterval(autoNextSlide, 6000);
+    }
+
+    function insertInquiry(text) {
+      const input = document.getElementById('chat-query-input') || document.getElementById('hero-search-input');
+      if (input) {
+        input.value = text;
+        input.focus();
+      }
+      const form = document.getElementById('chat-form');
+      if (form) {
+        htmx.trigger(form, 'submit');
+      }
+    }
+  </script>
+</body>
+</html>

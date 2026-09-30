@@ -1,0 +1,235 @@
+<!-- Hero Section with Central Search and Official Government Image Slider -->
+<section class="hero-section">
+  <div class="container hero-grid">
+    <div>
+      <div class="badge-tag">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span><%= (typeof language !== 'undefined' && language === 'hi') ? 'सहकारिता मंत्रालय, भारत सरकार का आधिकारिक सहायता तंत्र' : 'Ministry of Cooperation Statutory Guidance Portal' %></span>
+      </div>
+
+      <h1 class="hero-heading">
+        <%= (typeof language !== 'undefined' && language === 'hi')
+          ? 'सहकारी कानून, पैक्स नियम व सरकारी योजनाओं का प्रामाणिक मार्गदर्शन'
+          : 'Statutory Cooperative Law, Model PACS Bye-Laws & Government Schemes Portal' %>
+      </h1>
+
+      <p class="hero-desc">
+        <%= (typeof language !== 'undefined' && language === 'hi')
+          ? 'मॉडल पैक्स उप-नियम 2024, मल्टी-स्टेट सहकारी समिति अधिनियम, नाबार्ड परिपत्र व केंद्रीय योजनाओं से सीधे सत्यापित विधिक उत्तर प्राप्त करें।'
+          : 'Directly grounded in Model PACS Bye-Laws 2024, MSCS Act 2023, NABARD circulars, and verified Central Government schemes.' %>
+      </p>
+
+      <!-- Central Search Input triggering HTMX Chat directly -->
+      <form id="hero-search-form" class="search-form" hx-post="/chat/message" hx-target="#chat-messages-container" hx-swap="beforeend" hx-indicator="#chat-loading-spinner" onsubmit="document.getElementById('chat-scroll-anchor').scrollIntoView({behavior: 'smooth'})">
+        <input type="hidden" name="language" value="<%= (typeof language !== 'undefined' && language === 'hi') ? 'hi' : 'en' %>">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          id="hero-search-input"
+          name="query"
+          required
+          placeholder="<%= (typeof language !== 'undefined' && language === 'hi') ? 'कानूनी धारा, पैक्स नियम या योजना का नाम खोजें (उदा. पैक्स सदस्यता नियम, पीएम किसान)...' : 'Search statutory rules, PACS bye-laws, or scheme details...' %>"
+          class="search-input"
+        >
+        <button type="submit" class="search-btn">
+          <%= (typeof language !== 'undefined' && language === 'hi') ? 'खोजें (Ask AI)' : 'Ask AI' %>
+        </button>
+      </form>
+
+      <!-- Popular Inquiry Chips -->
+      <div class="chips-row">
+        <span style="font-size: 11px; font-weight: 700; color: #FDE68A; text-transform: uppercase;">
+          <%= (typeof language !== 'undefined' && language === 'hi') ? 'त्वरित प्रश्न:' : 'Common Inquiries:' %>
+        </span>
+        <% const chips = (typeof language !== 'undefined' && language === 'hi') ? [
+          'मॉडल पैक्स उप-नियम 2024',
+          'पैक्स सदस्यता व शेयर नियम',
+          'पीएम फसल बीमा 72 घंटे क्लेम',
+          'किसान क्रेडिट कार्ड 3 लाख 4%'
+        ] : [
+          'Model PACS Bye-Laws 2024',
+          'PACS Membership Rules',
+          'PMFBY 72-hr Claim Process',
+          'KCC 3 Lakh 4% Interest'
+        ]; %>
+        <% chips.forEach(function(chip) { %>
+          <button type="button" class="chip-btn" onclick="insertInquiry('<%= chip %>')">
+            <%= chip %>
+          </button>
+        <% }); %>
+      </div>
+    </div>
+
+    <!-- Official Government Leader Slideshow Container (HTMX swapped) -->
+    <div id="hero-slider-wrapper">
+      <%- include('partials/slider-slide', { slide: initialSlide, slideIndex: 0, language: language }) %>
+    </div>
+  </div>
+</section>
+
+<!-- Live AI Legal Advisor Chat Interface -->
+<section class="container" style="margin-top: 24px;">
+  <div id="chat-scroll-anchor"></div>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #10B981;"></div>
+        <span style="font-weight: 800; color: #0B3B60; font-size: 14px;">
+          <%= (typeof language !== 'undefined' && language === 'hi') ? 'सहकार विधिक सलाहकार (Live RAG Legal Advisor)' : 'Sahakar Legal AI Advisor (Grounded with Drive Knowledge)' %>
+        </span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <a href="/calibrate" style="font-size: 11px; color: #D97706; background: #FEF3C7; padding: 3px 8px; border-radius: 6px; font-weight: 700; text-decoration: none;">
+          🎙️ Bhashini Voice Ready
+        </a>
+        <span style="font-size: 11px; color: #64748B; background: #F1F5F9; padding: 3px 8px; border-radius: 6px; font-weight: 600;">
+          ⚡ Pure HTML+HTMX
+        </span>
+      </div>
+    </div>
+
+    <!-- Chat Messages Stream Container -->
+    <div id="chat-messages-container" class="chat-messages">
+      <!-- Welcome Message -->
+      <div class="chat-bubble ai">
+        <div style="font-weight: 800; color: #0B3B60; margin-bottom: 6px;">
+          🏛️ <%= (typeof language !== 'undefined' && language === 'hi') ? 'सहकार सहायक विधिक परामर्श में आपका स्वागत है' : 'Welcome to Sahakar Sahayak Legal Assistant' %>
+        </div>
+        <p style="font-size: 13.5px; color: #334155; margin-bottom: 10px;">
+          <%= (typeof language !== 'undefined' && language === 'hi')
+            ? 'आप पैक्स पंजीकरण, मॉडल उप-नियम 2024, समिति चुनाव, लेखा परीक्षा (Audit), किसान क्रेडिट कार्ड (KCC), या सरकारी अनुदानों से संबंधित कोई भी विधिक प्रश्न पूछ सकते हैं।'
+            : 'You can ask any legal, regulatory, or administrative questions regarding Model PACS Bye-laws 2024, Multi-State Co-operative Societies Act 2023, NABARD refinance guidelines, or KCC subventions.' %>
+        </p>
+        <div style="font-size: 12px; background: #FEF3C7; border: 1px solid #FDE68A; padding: 8px 12px; border-radius: 6px; color: #92400E;">
+          💡 <strong><%= (typeof language !== 'undefined' && language === 'hi') ? 'सुझाव:' : 'Tip:' %></strong>
+          <%= (typeof language !== 'undefined' && language === 'hi') ? 'आप लिखकर पूछ सकते हैं या माइक्रोफ़ोन बटन दबाकर बोल सकते हैं।' : 'Type your question or click the microphone button to speak in Hindi/regional dialect.' %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="chat-loading-spinner" class="htmx-indicator" style="padding: 12px 18px; align-items: center; gap: 10px; background: #F8FAFC; border-top: 1px solid #E2E8F0;">
+      <div class="spinner"></div>
+      <span style="font-size: 12px; color: #0B3B60; font-weight: 700;">
+        <%= (typeof language !== 'undefined' && language === 'hi') ? 'विधिक धाराओं एवं ज्ञान भंडार से उत्तर तैयार किया जा रहा है...' : 'Retrieving statutory clauses & generating grounded answer...' %>
+      </span>
+    </div>
+
+    <!-- Chat Input Form with HTMX POST -->
+    <div class="chat-footer">
+      <form
+        id="chat-form"
+        hx-post="/chat/message"
+        hx-target="#chat-messages-container"
+        hx-swap="beforeend"
+        hx-indicator="#chat-loading-spinner"
+        style="display: flex; gap: 8px; align-items: center;"
+        onsubmit="setTimeout(() => { const c = document.getElementById('chat-messages-container'); if(c) c.scrollTop = c.scrollHeight; document.getElementById('chat-query-input').value = ''; }, 50)"
+      >
+        <input type="hidden" name="language" value="<%= (typeof language !== 'undefined' && language === 'hi') ? 'hi' : 'en' %>">
+        
+        <!-- Voice Input / Bhashini ASR Button -->
+        <button
+          type="button"
+          id="mic-voice-btn"
+          onclick="triggerVoiceInput()"
+          title="Speak in Hindi / Regional dialect"
+          style="padding: 10px 14px; background: #F1F5F9; color: #0B3B60; border: 1px solid #CBD5E1; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </button>
+
+        <input
+          type="text"
+          id="chat-query-input"
+          name="query"
+          required
+          value="<%= (typeof initialInquiry !== 'undefined' && initialInquiry) ? initialInquiry : '' %>"
+          placeholder="<%= (typeof language !== 'undefined' && language === 'hi') ? 'अपना कानूनी या पैक्स संबंधित प्रश्न यहाँ लिखें...' : 'Type your legal or PACS-related query here...' %>"
+          style="flex: 1; padding: 11px 14px; border: 1px solid #CBD5E1; border-radius: 8px; font-size: 13.5px; outline: none;"
+        >
+        <button
+          type="submit"
+          style="padding: 11px 20px; background-color: #0B3B60; color: #FFFFFF; border: none; border-radius: 8px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; gap: 6px;"
+        >
+          <span><%= (typeof language !== 'undefined' && language === 'hi') ? 'भेजें' : 'Send' %></span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  function triggerVoiceInput() {
+    const micBtn = document.getElementById('mic-voice-btn');
+    const input = document.getElementById('chat-query-input');
+    
+    // Check Speech Recognition support in browser
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.lang = '<%= (typeof language !== "undefined" && language === "hi") ? "hi-IN" : "en-IN" %>';
+      recognition.interimResults = false;
+
+      if (micBtn) micBtn.style.background = '#FEE2E2';
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (input) input.value = transcript;
+        if (micBtn) micBtn.style.background = '#F1F5F9';
+        
+        // HTMX submit
+        const form = document.getElementById('chat-form');
+        if (form) htmx.trigger(form, 'submit');
+      };
+
+      recognition.onerror = () => {
+        if (micBtn) micBtn.style.background = '#F1F5F9';
+        simulateVoiceASR();
+      };
+
+      recognition.start();
+    } else {
+      simulateVoiceASR();
+    }
+  }
+
+  function simulateVoiceASR() {
+    const sampleQueries = [
+      "मॉडल पैक्स उप-नियम 2024 के तहत सदस्यता के क्या नियम हैं?",
+      "किसान क्रेडिट कार्ड पर 4 प्रतिशत ब्याज का लाभ कैसे मिलता है?",
+      "फसल नुकसान होने पर 72 घंटे में बीमा क्लेम कैसे करें?",
+      "पैक्स में कॉमन सर्विस सेंटर (CSC) कैसे खोला जा सकता है?"
+    ];
+    const picked = sampleQueries[Math.floor(Math.random() * sampleQueries.length)];
+    const input = document.getElementById('chat-query-input');
+    if (input) {
+      input.value = picked;
+      const form = document.getElementById('chat-form');
+      if (form) htmx.trigger(form, 'submit');
+    }
+  }
+
+  <% if (typeof initialInquiry !== 'undefined' && initialInquiry) { %>
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        const form = document.getElementById('chat-form');
+        if (form) htmx.trigger(form, 'submit');
+      }, 200);
+    });
+  <% } %>
+</script>

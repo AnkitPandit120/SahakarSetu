@@ -17,6 +17,11 @@ import {
   Check
 } from 'lucide-react';
 import { Language } from '../types';
+import {
+  signInWithGoogleDrive,
+  getDriveAccessToken,
+  disconnectGoogleDrive
+} from '../services/googleDrive';
 
 interface DriveFoldersViewProps {
   language: Language;
@@ -108,11 +113,18 @@ export const DriveFoldersView: React.FC<DriveFoldersViewProps> = ({ language }) 
     setErrorMessage(null);
 
     try {
+      const clientToken = getDriveAccessToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (clientToken) {
+        headers['Authorization'] = `Bearer ${clientToken}`;
+      }
+
       const response = await fetch('/api/rag/sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
-          folderId: stats?.folderId || inputFolderId || undefined
+          folderId: stats?.folderId || inputFolderId || undefined,
+          accessToken: clientToken || undefined
         })
       });
 
@@ -126,6 +138,42 @@ export const DriveFoldersView: React.FC<DriveFoldersViewProps> = ({ language }) 
     } catch (err: any) {
       console.error('Sync failed:', err);
       setErrorMessage(err.message || 'Synchronization failed.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // One-click popup sign-in with Google Drive
+  const handleConnectDrivePopup = async () => {
+    try {
+      setErrorMessage(null);
+      const res = await signInWithGoogleDrive();
+      if (res.accessToken) {
+        setSyncReportMessage(`Google Drive connected for ${res.user.email || res.user.displayName || 'User'}`);
+        // Now trigger sync with the newly acquired token
+        setIsSyncing(true);
+        const syncRes = await fetch('/api/rag/sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${res.accessToken}`
+          },
+          body: JSON.stringify({
+            folderId: stats?.folderId || inputFolderId || undefined,
+            accessToken: res.accessToken
+          })
+        });
+        const syncData = await syncRes.json();
+        if (syncRes.ok) {
+          setSyncReportMessage(syncData.message || 'Google Drive connected and synchronized.');
+        }
+        await fetchStatus();
+      }
+    } catch (err: any) {
+      console.warn('Popup sign in cancelled or failed:', err);
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setErrorMessage(err.message || 'Google Sign-in failed. Please try again.');
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -180,6 +228,7 @@ export const DriveFoldersView: React.FC<DriveFoldersViewProps> = ({ language }) 
   // Disconnect Google Drive
   const handleDisconnect = async () => {
     try {
+      await disconnectGoogleDrive();
       await fetch('/api/auth/disconnect', { method: 'POST' });
       await fetchStatus();
       setSyncReportMessage('Google Drive session disconnected.');
@@ -290,13 +339,14 @@ export const DriveFoldersView: React.FC<DriveFoldersViewProps> = ({ language }) 
               </button>
 
               {!isConnected ? (
-                <a
-                  href="/api/auth/google"
-                  className="px-3.5 py-2 bg-[#0B3B60] hover:bg-[#07253d] text-white text-xs font-bold rounded-lg shadow-2xs flex items-center gap-1.5 transition-colors"
+                <button
+                  id="connect-drive-btn"
+                  onClick={handleConnectDrivePopup}
+                  className="px-3.5 py-2 bg-[#0B3B60] hover:bg-[#07253d] text-white text-xs font-bold rounded-lg shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <HardDrive className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Connect Google Drive</span>
-                </a>
+                </button>
               ) : (
                 <button
                   onClick={handleDisconnect}

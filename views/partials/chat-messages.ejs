@@ -1,0 +1,44 @@
+<!-- User Message Bubble -->
+<div class="chat-bubble user">
+  <div style="font-size: 11px; opacity: 0.8; margin-bottom: 2px; font-weight: 700;">You</div>
+  <div><%= userQuery %></div>
+</div>
+
+<!-- AI Response Bubble -->
+<div class="chat-bubble ai">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px;">
+    <div style="display: flex; align-items: center; gap: 6px; font-weight: 800; color: #0B3B60; font-size: 13px;">
+      <span>🏛️</span>
+      <span>SahakarSetu AI (प्रामाणिक विधिक उत्तर)</span>
+    </div>
+    <span style="font-size: 10px; background: #ECFDF5; color: #065F46; padding: 2px 6px; border-radius: 4px; font-weight: 700;">
+      <%= confidenceScore ? (confidenceScore * 100).toFixed(0) + '% Grounded' : 'Statutory Grounded' %>
+    </span>
+  </div>
+
+  <div class="markdown-body" style="font-size: 13.5px; line-height: 1.65; color: #1E293B;">
+    <%- formattedAnswerHtml %>
+  </div>
+
+  <% if (citations && citations.length > 0) { %>
+    <div class="citation-box">
+      <div style="font-weight: 700; color: #1E40AF; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
+        <span>📚</span>
+        <span><%= (typeof language !== 'undefined' && language === 'hi') ? 'प्रमाणित स्रोत एवं विधिक संदर्भ:' : 'Verified Statutory Sources & Drive References:' %></span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <% citations.forEach(function(cit) { %>
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; background: #FFFFFF; padding: 4px 8px; border-radius: 4px; border: 1px solid #DBEAFE;">
+            <div style="display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <span class="citation-tag"><%= cit.category ? cit.category.toUpperCase() : 'STATUTE' %></span>
+              <span style="font-weight: 600; color: #1E293B;"><%= cit.title %></span>
+            </div>
+            <% if (cit.url) { %>
+              <a href="<%= cit.url %>" target="_blank" rel="noopener noreferrer" style="color: #2563EB; font-weight: 700; text-decoration: none; font-size: 11px; flex-shrink: 0;">View ↗</a>
+            <% } %>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  <% } %>
+</div>
